@@ -2,34 +2,54 @@
 
 namespace App\Filament\Resources\Rooms\Schemas;
 
-use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Schema;
+use App\Models\RoomType;
 
 class RoomForm
 {
     public static function configure(Schema $schema): Schema
     {
-        return $schema
-            ->components([
-                Select::make('room_type_id')
-                    ->relationship('roomType', 'name')
-                    ->required(),
-                TextInput::make('number')
-                    ->required(),
-                TextInput::make('floor')
-                    ->numeric(),
-                TextInput::make('status')
-                    ->required()
-                    ->default('libre'),
-                Toggle::make('is_active')
-                    ->required(),
-                DateTimePicker::make('status_changed_at'),
-                Textarea::make('notes')
-                    ->columnSpanFull(),
-            ]);
+        return $schema->components([
+            Select::make('room_type_id')
+                ->label('Tipo de habitación')
+                ->options(RoomType::active()->pluck('name', 'id'))
+                ->searchable()
+                ->required(),
+
+            TextInput::make('number')
+                ->label('Número de habitación')
+                ->required()
+                ->maxLength(10)
+                ->unique(ignoreRecord: true)
+                ->placeholder('101, A2, SUITE-1...'),
+
+            TextInput::make('floor')
+                ->label('Piso')
+                ->numeric()
+                ->minValue(1),
+
+            Select::make('status')
+                ->label('Estado')
+                ->options([
+                    'libre'         => '🟢 Libre',
+                    'sucia'         => '🟡 Sucia',
+                    'ocupada'       => '🔴 Ocupada',
+                    'no_disponible' => '⚫ No disponible',
+                ])
+                ->default('libre')
+                ->required(),
+
+            Toggle::make('is_active')
+                ->label('Activa')
+                ->default(true),
+
+            Textarea::make('notes')
+                ->label('Notas internas')
+                ->rows(2),
+        ]);
     }
 }

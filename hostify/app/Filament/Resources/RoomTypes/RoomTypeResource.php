@@ -10,6 +10,7 @@ use App\Filament\Resources\RoomTypes\Tables\RoomTypesTable;
 use App\Models\RoomType;
 use BackedEnum;
 use Filament\Resources\Resource;
+use UnitEnum;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
@@ -17,10 +18,13 @@ use Filament\Tables\Table;
 class RoomTypeResource extends Resource
 {
     protected static ?string $model = RoomType::class;
-
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
-
-    protected static ?string $recordTitleAttribute = 'name';
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::Tag;
+    protected static string|UnitEnum|null $navigationGroup        = 'Configuración';
+    protected static ?string $navigationLabel        = 'Tipos de Habitación';
+    protected static ?string $modelLabel             = 'Tipo de Habitación';
+    protected static ?string $pluralModelLabel       = 'Tipos de Habitación';
+    protected static ?string $recordTitleAttribute   = 'name';
+    protected static ?int    $navigationSort         = 1;
 
     public static function form(Schema $schema): Schema
     {
@@ -32,19 +36,12 @@ class RoomTypeResource extends Resource
         return RoomTypesTable::configure($table);
     }
 
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
-
     public static function getPages(): array
     {
         return [
-            'index' => ListRoomTypes::route('/'),
+            'index'  => ListRoomTypes::route('/'),
             'create' => CreateRoomType::route('/create'),
-            'edit' => EditRoomType::route('/{record}/edit'),
+            'edit'   => EditRoomType::route('/{record}/edit'),
         ];
     }
 }

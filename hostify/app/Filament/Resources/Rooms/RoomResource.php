@@ -9,20 +9,22 @@ use App\Filament\Resources\Rooms\Schemas\RoomForm;
 use App\Filament\Resources\Rooms\Tables\RoomsTable;
 use App\Models\Room;
 use BackedEnum;
+use UnitEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class RoomResource extends Resource
 {
     protected static ?string $model = Room::class;
-
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
-
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::Home;
+    protected static string|UnitEnum|null $navigationGroup      = 'Configuración';
+    protected static ?string $navigationLabel      = 'Habitaciones';
+    protected static ?string $modelLabel           = 'Habitación';
+    protected static ?string $pluralModelLabel     = 'Habitaciones';
     protected static ?string $recordTitleAttribute = 'number';
+    protected static ?int    $navigationSort       = 2;
 
     public static function form(Schema $schema): Schema
     {
@@ -34,27 +36,12 @@ class RoomResource extends Resource
         return RoomsTable::configure($table);
     }
 
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
-
     public static function getPages(): array
     {
         return [
-            'index' => ListRooms::route('/'),
+            'index'  => ListRooms::route('/'),
             'create' => CreateRoom::route('/create'),
-            'edit' => EditRoom::route('/{record}/edit'),
+            'edit'   => EditRoom::route('/{record}/edit'),
         ];
-    }
-
-    public static function getRecordRouteBindingEloquentQuery(): Builder
-    {
-        return parent::getRecordRouteBindingEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
     }
 }

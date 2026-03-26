@@ -9,20 +9,22 @@ use App\Filament\Resources\Reservations\Schemas\ReservationForm;
 use App\Filament\Resources\Reservations\Tables\ReservationsTable;
 use App\Models\Reservation;
 use BackedEnum;
+use UnitEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ReservationResource extends Resource
 {
     protected static ?string $model = Reservation::class;
-
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
-
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::CalendarDays;
+    protected static string|UnitEnum|null $navigationGroup      = 'Operaciones';
+    protected static ?string $navigationLabel      = 'Reservas';
+    protected static ?string $modelLabel           = 'Reserva';
+    protected static ?string $pluralModelLabel     = 'Reservas';
     protected static ?string $recordTitleAttribute = 'id';
+    protected static ?int    $navigationSort       = 2;
 
     public static function form(Schema $schema): Schema
     {
@@ -34,27 +36,12 @@ class ReservationResource extends Resource
         return ReservationsTable::configure($table);
     }
 
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
-
     public static function getPages(): array
     {
         return [
-            'index' => ListReservations::route('/'),
+            'index'  => ListReservations::route('/'),
             'create' => CreateReservation::route('/create'),
-            'edit' => EditReservation::route('/{record}/edit'),
+            'edit'   => EditReservation::route('/{record}/edit'),
         ];
-    }
-
-    public static function getRecordRouteBindingEloquentQuery(): Builder
-    {
-        return parent::getRecordRouteBindingEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
     }
 }

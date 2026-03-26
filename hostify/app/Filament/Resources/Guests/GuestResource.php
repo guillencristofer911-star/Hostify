@@ -9,20 +9,22 @@ use App\Filament\Resources\Guests\Schemas\GuestForm;
 use App\Filament\Resources\Guests\Tables\GuestsTable;
 use App\Models\Guest;
 use BackedEnum;
+use UnitEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class GuestResource extends Resource
 {
     protected static ?string $model = Guest::class;
-
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
-
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::Users;
+    protected static string|UnitEnum|null $navigationGroup      = 'Operaciones';
+    protected static ?string $navigationLabel      = 'Huéspedes';
+    protected static ?string $modelLabel           = 'Huésped';
+    protected static ?string $pluralModelLabel     = 'Huéspedes';
     protected static ?string $recordTitleAttribute = 'full_name';
+    protected static ?int    $navigationSort       = 1;
 
     public static function form(Schema $schema): Schema
     {
@@ -34,27 +36,12 @@ class GuestResource extends Resource
         return GuestsTable::configure($table);
     }
 
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
-
     public static function getPages(): array
     {
         return [
-            'index' => ListGuests::route('/'),
+            'index'  => ListGuests::route('/'),
             'create' => CreateGuest::route('/create'),
-            'edit' => EditGuest::route('/{record}/edit'),
+            'edit'   => EditGuest::route('/{record}/edit'),
         ];
-    }
-
-    public static function getRecordRouteBindingEloquentQuery(): Builder
-    {
-        return parent::getRecordRouteBindingEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
     }
 }

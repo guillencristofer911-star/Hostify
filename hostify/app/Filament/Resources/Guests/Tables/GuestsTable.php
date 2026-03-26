@@ -2,14 +2,13 @@
 
 namespace App\Filament\Resources\Guests\Tables;
 
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\ForceDeleteBulkAction;
-use Filament\Actions\RestoreBulkAction;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\TrashedFilter;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 class GuestsTable
@@ -18,47 +17,48 @@ class GuestsTable
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID'),
                 TextColumn::make('full_name')
-                    ->searchable(),
+                    ->label('Nombre')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('bold'),
+
                 TextColumn::make('document_type')
-                    ->searchable(),
+                    ->label('Tipo doc.')
+                    ->badge(),
+
                 TextColumn::make('document_number')
+                    ->label('Documento')
                     ->searchable(),
+
                 TextColumn::make('phone')
-                    ->searchable(),
+                    ->label('Teléfono'),
+
                 TextColumn::make('email')
-                    ->label('Email address')
+                    ->label('Email')
                     ->searchable(),
-                TextColumn::make('nationality')
-                    ->searchable(),
+
+                TextColumn::make('reservations_count')
+                    ->label('Reservas')
+                    ->counts('reservations')
+                    ->badge()
+                    ->color('info'),
+
                 IconColumn::make('is_active')
+                    ->label('Activo')
                     ->boolean(),
-                TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                TrashedFilter::make(),
+                TernaryFilter::make('is_active')
+                    ->label('Estado'),
             ])
             ->recordActions([
                 EditAction::make(),
+                DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
                 ]),
             ]);
     }

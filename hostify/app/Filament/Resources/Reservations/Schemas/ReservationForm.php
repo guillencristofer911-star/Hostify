@@ -7,7 +7,6 @@ use App\Models\Room;
 use App\Models\Reservation;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -19,7 +18,7 @@ class ReservationForm
     {
         return $schema->components([
 
-            //  HUÉSPED 
+            // HUÉSPED
             Select::make('guest_id')
                 ->label('Huésped')
                 ->options(
@@ -57,7 +56,7 @@ class ReservationForm
                     return Guest::create(array_merge($data, ['is_active' => true]))->id;
                 }),
 
-            //  FECHAS 
+            // FECHAS
             DatePicker::make('check_in_date')
                 ->label('Fecha entrada')
                 ->required()
@@ -77,9 +76,10 @@ class ReservationForm
                     $set('room_id', null);
                 }),
 
-            //  HABITACIÓN
+            // HABITACIÓN
             Select::make('room_id')
                 ->label('Habitación')
+                ->required()
                 ->options(function (Get $get) {
                     $checkIn  = $get('check_in_date');
                     $checkOut = $get('check_out_date');
@@ -101,7 +101,7 @@ class ReservationForm
                     return $query->get()->mapWithKeys(function ($r) {
                         $label = 'Hab. ' . $r->number
                             . ' — ' . $r->roomType->name
-                            . ' ($' . number_format($r->roomType->base_price, 0, ',', '.')  . ')';
+                            . ' ($' . number_format($r->roomType->base_price, 0, ',', '.') . ')';
                         return [$r->id => $label];
                     });
                 })
@@ -114,7 +114,7 @@ class ReservationForm
                     }
                 }),
 
-            //  TARIFA  
+            // TARIFA
             TextInput::make('rate')
                 ->label('Tarifa por noche')
                 ->numeric()
@@ -122,37 +122,6 @@ class ReservationForm
                 ->required()
                 ->helperText('Se llena automáticamente al seleccionar habitación. Puedes modificarla.'),
 
-            //  FUENTE 
-            Select::make('source')
-                ->label('Origen de la reserva')
-                ->options([
-                    'manual_reception' => '🖥️ Recepción manual',
-                    'web_form'         => '🌐 Formulario web',
-                ])
-                ->default('manual_reception')
-                ->required(),
-
-            // ESTADO 
-            Select::make('status')
-                ->label('Estado')
-                ->options([
-                    'pendiente'   => '🕐 Pendiente',
-                    'aprobada'    => '✅ Aprobada',
-                    'rechazada'   => '❌ Rechazada',
-                    'activa'      => '🏠 Activa (Check-in)',
-                    'checked_out' => '🚪 Check-out',
-                    'cancelada'   => '🚫 Cancelada',
-                ])
-                ->default('pendiente')
-                ->required()
-                ->live(),
-
-            //  MOTIVO RECHAZO 
-            Textarea::make('rejection_reason')
-                ->label('Motivo de rechazo')
-                ->rows(2)
-                ->visible(fn (Get $get): bool => $get('status') === 'rechazada')
-                ->required(fn (Get $get): bool => $get('status') === 'rechazada'),
         ]);
     }
 }

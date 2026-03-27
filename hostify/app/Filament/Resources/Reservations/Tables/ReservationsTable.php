@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Reservations\Tables;
 
 use App\Models\Reservation;
-use App\Models\Room;
 use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
@@ -24,26 +23,31 @@ class ReservationsTable
                     ->label('Huésped')
                     ->searchable()
                     ->sortable()
-                    ->weight('bold'),
+                    ->weight('bold')
+                    ->icon('heroicon-o-user'),
 
                 TextColumn::make('guest.document_number')
                     ->label('Documento')
-                    ->searchable(),
+                    ->searchable()
+                    ->icon('heroicon-o-identification'),
 
                 TextColumn::make('room.number')
                     ->label('Habitación')
                     ->badge()
-                    ->color('info'),
+                    ->color('info')
+                    ->icon('heroicon-o-home'),
 
                 TextColumn::make('check_in_date')
                     ->label('Entrada')
                     ->date('d/m/Y')
-                    ->sortable(),
+                    ->sortable()
+                    ->icon('heroicon-o-arrow-right-circle'),
 
                 TextColumn::make('check_out_date')
                     ->label('Salida')
                     ->date('d/m/Y')
-                    ->sortable(),
+                    ->sortable()
+                    ->icon('heroicon-o-arrow-left-circle'),
 
                 TextColumn::make('status')
                     ->label('Estado')
@@ -57,26 +61,46 @@ class ReservationsTable
                         'cancelada'   => 'danger',
                         default       => 'gray',
                     })
+                    ->icon(fn (string $state): string => match ($state) {
+                        'pendiente'   => 'heroicon-o-clock',
+                        'aprobada'    => 'heroicon-o-check-circle',
+                        'activa'      => 'heroicon-o-home',
+                        'checked_out' => 'heroicon-o-arrow-left-on-rectangle',
+                        'rechazada'   => 'heroicon-o-x-circle',
+                        'cancelada'   => 'heroicon-o-no-symbol',
+                        default       => 'heroicon-o-question-mark-circle',
+                    })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'pendiente'   => '🕐 Pendiente',
-                        'aprobada'    => '✅ Aprobada',
-                        'activa'      => '🏠 Activa',
-                        'checked_out' => '🚪 Check-out',
-                        'rechazada'   => '❌ Rechazada',
-                        'cancelada'   => '🚫 Cancelada',
+                        'pendiente'   => 'Pendiente',
+                        'aprobada'    => 'Aprobada',
+                        'activa'      => 'Activa',
+                        'checked_out' => 'Check-out',
+                        'rechazada'   => 'Rechazada',
+                        'cancelada'   => 'Cancelada',
                         default       => $state,
                     }),
 
                 TextColumn::make('rate')
                     ->label('Tarifa/noche')
-                    ->money('COP'),
+                    ->money('COP')
+                    ->icon('heroicon-o-banknotes'),
 
                 TextColumn::make('source')
                     ->label('Origen')
                     ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'manual_reception' => 'gray',
+                        'web_form'         => 'info',
+                        default            => 'gray',
+                    })
+                    ->icon(fn (string $state): string => match ($state) {
+                        'manual_reception' => 'heroicon-o-computer-desktop',
+                        'web_form'         => 'heroicon-o-globe-alt',
+                        default            => 'heroicon-o-question-mark-circle',
+                    })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'manual_reception' => '🖥️ Recepción',
-                        'web_form'         => '🌐 Web',
+                        'manual_reception' => 'Recepción',
+                        'web_form'         => 'Web',
                         default            => $state,
                     }),
             ])
@@ -85,46 +109,49 @@ class ReservationsTable
                 SelectFilter::make('status')
                     ->label('Estado')
                     ->options([
-                        'pendiente'   => '🕐 Pendiente',
-                        'aprobada'    => '✅ Aprobada',
-                        'activa'      => '🏠 Activa',
-                        'checked_out' => '🚪 Check-out',
-                        'rechazada'   => '❌ Rechazada',
-                        'cancelada'   => '🚫 Cancelada',
+                        'pendiente'   => 'Pendiente',
+                        'aprobada'    => 'Aprobada',
+                        'activa'      => 'Activa',
+                        'checked_out' => 'Check-out',
+                        'rechazada'   => 'Rechazada',
+                        'cancelada'   => 'Cancelada',
                     ]),
 
                 SelectFilter::make('source')
                     ->label('Origen')
                     ->options([
-                        'manual_reception' => '🖥️ Recepción',
-                        'web_form'         => '🌐 Web',
+                        'manual_reception' => 'Recepción',
+                        'web_form'         => 'Web',
                     ]),
             ])
             ->recordActions([
-                //  APROBAR 
+                // APROBAR
                 Action::make('aprobar')
                     ->label('Aprobar')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->modalHeading('¿Aprobar reserva?')
-                    ->modalDescription('La reserva quedará confirmada y lista para check-in.')
+                    ->modalHeading('Aprobar reserva')
+                    ->modalIcon('heroicon-o-check-circle')
+                    ->modalDescription('La reserva quedará confirmada y lista para registrar entrada.')
                     ->visible(fn (Reservation $record): bool => $record->status === 'pendiente')
                     ->action(function (Reservation $record) {
                         $record->update(['status' => 'aprobada']);
                         Notification::make()
                             ->title('Reserva aprobada')
+                            ->icon('heroicon-o-check-circle')
                             ->success()
                             ->send();
                     }),
 
-                // RECHAZAR 
+                // RECHAZAR
                 Action::make('rechazar')
                     ->label('Rechazar')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->requiresConfirmation()
-                    ->modalHeading('¿Rechazar reserva?')
+                    ->modalHeading('Rechazar reserva')
+                    ->modalIcon('heroicon-o-x-circle')
                     ->form([
                         \Filament\Forms\Components\Textarea::make('rejection_reason')
                             ->label('Motivo de rechazo')
@@ -139,42 +166,59 @@ class ReservationsTable
                         ]);
                         Notification::make()
                             ->title('Reserva rechazada')
+                            ->icon('heroicon-o-x-circle')
                             ->warning()
                             ->send();
                     }),
 
-                //  CHECK-IN 
-                Action::make('checkin')
-                    ->label('Check-in')
-                    ->icon('heroicon-o-arrow-right-circle')
-                    ->color('success')
-                    ->requiresConfirmation()
-                    ->modalHeading('Confirmar Check-in')
-                    ->modalDescription(fn (Reservation $record) =>
-                        "Huésped: {$record->guest->full_name} — Hab. {$record->room->number}"
-                    )
-                    ->visible(fn (Reservation $record): bool => $record->status === 'aprobada')
-                    ->action(function (Reservation $record) {
-                        $record->update([
-                            'status'          => 'activa',
-                            'actual_check_in' => now(),
-                        ]);
-                        $record->room->updateStatus('ocupada');
+                // REGISTRAR ENTRADA
+                // REGISTRAR ENTRADA
+Action::make('checkin')
+    ->label('Registrar entrada')
+    ->icon('heroicon-o-arrow-right-on-rectangle')
+    ->color('success')
+    ->requiresConfirmation()
+    ->modalHeading('Registrar entrada')
+    ->modalIcon('heroicon-o-arrow-right-on-rectangle')
+    ->modalDescription(fn (Reservation $record) =>
+        "Huésped: {$record->guest->full_name} — Hab. " . ($record->room?->number ?? 'Sin asignar')
+    )
+    ->visible(fn (Reservation $record): bool => $record->status === 'aprobada')
+    ->action(function (Reservation $record) {
+        // Bloquear si no tiene habitación asignada
+        if (! $record->room) {
+            Notification::make()
+                ->title('Sin habitación asignada')
+                ->body('Debes editar la reserva y asignar una habitación antes de registrar la entrada.')
+                ->icon('heroicon-o-exclamation-triangle')
+                ->danger()
+                ->send();
+            return;
+        }
 
-                        Notification::make()
-                            ->title('Check-in realizado')
-                            ->body("Hab. {$record->room->number} — {$record->guest->full_name}")
-                            ->success()
-                            ->send();
-                    }),
+        $record->update([
+            'status'          => 'activa',
+            'actual_check_in' => now(),
+        ]);
+        $record->room->updateStatus('ocupada');
 
-                //  CHECK-OUT 
+        Notification::make()
+            ->title('Entrada registrada')
+            ->body("Hab. {$record->room->number} — {$record->guest->full_name}")
+            ->icon('heroicon-o-arrow-right-on-rectangle')
+            ->success()
+            ->send();
+    }),
+
+
+                // REGISTRAR SALIDA
                 Action::make('checkout')
-                    ->label('Check-out')
-                    ->icon('heroicon-o-arrow-left-circle')
+                    ->label('Registrar salida')
+                    ->icon('heroicon-o-arrow-left-on-rectangle')
                     ->color('warning')
                     ->requiresConfirmation()
-                    ->modalHeading('Confirmar Check-out')
+                    ->modalHeading('Registrar salida')
+                    ->modalIcon('heroicon-o-arrow-left-on-rectangle')
                     ->modalDescription(fn (Reservation $record) =>
                         "¿Confirmar salida de {$record->guest->full_name} de Hab. {$record->room->number}?"
                     )
@@ -187,19 +231,21 @@ class ReservationsTable
                         $record->room->updateStatus('sucia');
 
                         Notification::make()
-                            ->title('Check-out realizado')
-                            ->body("Hab. {$record->room->number} queda pendiente de limpieza 🧹")
+                            ->title('Salida registrada')
+                            ->body("Hab. {$record->room->number} queda pendiente de limpieza")
+                            ->icon('heroicon-o-sparkles')
                             ->warning()
                             ->send();
                     }),
 
-                //  CANCELAR 
+                // CANCELAR
                 Action::make('cancelar')
-                    ->label('Cancelar')
+                    ->label('Cancelar reserva')
                     ->icon('heroicon-o-no-symbol')
                     ->color('danger')
                     ->requiresConfirmation()
-                    ->modalHeading('¿Cancelar reserva?')
+                    ->modalHeading('Cancelar reserva')
+                    ->modalIcon('heroicon-o-no-symbol')
                     ->visible(fn (Reservation $record): bool =>
                         in_array($record->status, ['pendiente', 'aprobada'])
                     )
@@ -207,16 +253,22 @@ class ReservationsTable
                         $record->update(['status' => 'cancelada']);
                         Notification::make()
                             ->title('Reserva cancelada')
+                            ->icon('heroicon-o-no-symbol')
                             ->danger()
                             ->send();
                     }),
 
-                EditAction::make()->label('Editar'),
-                DeleteAction::make()->label('Eliminar'),
+                EditAction::make()
+                    ->label('Editar')
+                    ->icon('heroicon-o-pencil-square'),
+
+                DeleteAction::make()
+                    ->label('Eliminar')
+                    ->icon('heroicon-o-trash'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()->label('Eliminar seleccionados'),
                 ]),
             ]);
     }

@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Reservations\Tables;
 
+use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\Reservation;
 use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
@@ -12,6 +14,8 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ReservationsTable
 {
@@ -172,69 +176,129 @@ class ReservationsTable
                     }),
 
                 // REGISTRAR ENTRADA
-                // REGISTRAR ENTRADA
-Action::make('checkin')
-    ->label('Registrar entrada')
-    ->icon('heroicon-o-arrow-right-on-rectangle')
-    ->color('success')
-    ->requiresConfirmation()
-    ->modalHeading('Registrar entrada')
-    ->modalIcon('heroicon-o-arrow-right-on-rectangle')
-    ->modalDescription(fn (Reservation $record) =>
-        "Huésped: {$record->guest->full_name} — Hab. " . ($record->room?->number ?? 'Sin asignar')
-    )
-    ->visible(fn (Reservation $record): bool => $record->status === 'aprobada')
-    ->action(function (Reservation $record) {
-        // Bloquear si no tiene habitación asignada
-        if (! $record->room) {
-            Notification::make()
-                ->title('Sin habitación asignada')
-                ->body('Debes editar la reserva y asignar una habitación antes de registrar la entrada.')
-                ->icon('heroicon-o-exclamation-triangle')
-                ->danger()
-                ->send();
-            return;
-        }
+                Action::make('checkin')
+                    ->label('Registrar entrada')
+                    ->icon('heroicon-o-arrow-right-on-rectangle')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading('Registrar entrada')
+                    ->modalIcon('heroicon-o-arrow-right-on-rectangle')
+                    ->modalDescription(fn (Reservation $record) =>
+                        "Huésped: {$record->guest->full_name} — Hab. " . ($record->room?->number ?? 'Sin asignar')
+                    )
+                    ->visible(fn (Reservation $record): bool => $record->status === 'aprobada')
+                    ->action(function (Reservation $record) {
+                        if (! $record->room) {
+                            Notification::make()
+                                ->title('Sin habitación asignada')
+                                ->body('Debes editar la reserva y asignar una habitación antes de registrar la entrada.')
+                                ->icon('heroicon-o-exclamation-triangle')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
 
-        $record->update([
-            'status'          => 'activa',
-            'actual_check_in' => now(),
-        ]);
-        $record->room->updateStatus('ocupada');
+                        $record->update([
+                            'status'          => 'activa',
+                            'actual_check_in' => now(),
+                        ]);
+                        $record->room->updateStatus('ocupada');
 
-        Notification::make()
-            ->title('Entrada registrada')
-            ->body("Hab. {$record->room->number} — {$record->guest->full_name}")
-            ->icon('heroicon-o-arrow-right-on-rectangle')
-            ->success()
-            ->send();
-    }),
-
+                        Notification::make()
+                            ->title('Entrada registrada')
+                            ->body("Hab. {$record->room->number} — {$record->guest->full_name}")
+                            ->icon('heroicon-o-arrow-right-on-rectangle')
+                            ->success()
+                            ->send();
+                    }),
 
                 // REGISTRAR SALIDA
                 Action::make('checkout')
                     ->label('Registrar salida')
                     ->icon('heroicon-o-arrow-left-on-rectangle')
                     ->color('warning')
-                    ->requiresConfirmation()
-                    ->modalHeading('Registrar salida')
+                    ->modalHeading('Registrar salida y cobro')
                     ->modalIcon('heroicon-o-arrow-left-on-rectangle')
                     ->modalDescription(fn (Reservation $record) =>
-                        "¿Confirmar salida de {$record->guest->full_name} de Hab. {$record->room->number}?"
+                        "Huésped: {$record->guest->full_name} — Hab. {$record->room?->number}"
                     )
+                    ->form(function (Reservation $record) {
+                        $nights     = $record->nights;
+                        $roomTotal  = $record->room_total;
+                        $extraTotal = $record->total_charges;
+                        $grandTotal = $record->invoice_total;
+
+                        return [
+                            \Filament\Forms\Components\Placeholder::make('resumen')
+                                ->label('Resumen de estancia')
+                                ->content(
+                                    "Noches: {$nights} × $" . number_format((float) $record->rate, 0, ',', '.') .
+                                    " = $" . number_format($roomTotal, 0, ',', '.') .
+                                    " | Cargos extras: $" . number_format($extraTotal, 0, ',', '.') .
+                                    " | Total: $" . number_format($grandTotal, 0, ',', '.')
+                                ),
+
+                            \Filament\Forms\Components\TextInput::make('amount')
+                                ->label('Monto recibido')
+                                ->numeric()
+                                ->prefix('$')
+                                ->default(fn () => $grandTotal)
+                                ->required(),
+
+                            \Filament\Forms\Components\Select::make('method')
+                                ->label('Método de pago')
+                                ->options([
+                                    'efectivo'      => 'Efectivo',
+                                    'datafono'      => 'Datáfono',
+                                    'transferencia' => 'Transferencia',
+                                ])
+                                ->default('efectivo')
+                                ->required()
+                                ->native(false),
+
+                            \Filament\Forms\Components\Textarea::make('notes')
+                                ->label('Observaciones')
+                                ->rows(2)
+                                ->placeholder('Opcional'),
+                        ];
+                    })
                     ->visible(fn (Reservation $record): bool => $record->status === 'activa')
-                    ->action(function (Reservation $record) {
-                        $record->update([
-                            'status'           => 'checked_out',
-                            'actual_check_out' => now(),
-                        ]);
-                        $record->room->updateStatus('sucia');
+                    ->action(function (Reservation $record, array $data) {
+                        DB::transaction(function () use ($record, $data) {
+
+                            $record->update([
+                                'status'           => 'checked_out',
+                                'actual_check_out' => now(),
+                            ]);
+
+                            $record->room->updateStatus('sucia');
+
+                            $subtotal = $record->invoice_total;
+
+                            Invoice::create([
+                                'reservation_id' => $record->id,
+                                'invoice_number' => Invoice::generateNumber(),
+                                'subtotal'       => $subtotal,
+                                'taxes'          => 0,
+                                'total'          => $subtotal,
+                                'status'         => 'pagada',
+                            ]);
+
+                            Payment::create([
+                                'reservation_id' => $record->id,
+                                'registered_by'  => Auth::id(),
+                                'amount'         => $data['amount'],
+                                'method'         => $data['method'],
+                                'paid_at'        => now(),
+                                'notes'          => $data['notes'] ?? null,
+                            ]);
+                        });
 
                         Notification::make()
-                            ->title('Salida registrada')
+                            ->title('Salida registrada — Factura generada')
                             ->body("Hab. {$record->room->number} queda pendiente de limpieza")
-                            ->icon('heroicon-o-sparkles')
-                            ->warning()
+                            ->icon('heroicon-o-document-check')
+                            ->success()
                             ->send();
                     }),
 

@@ -29,7 +29,8 @@ class Reservation extends Model
         'rate'             => 'decimal:2',
     ];
 
-    // Relaciones 
+    // Relaciones
+
     public function guest(): BelongsTo
     {
         return $this->belongsTo(Guest::class);
@@ -71,14 +72,26 @@ class Reservation extends Model
     }
 
     // Helpers
+
+    // Mínimo 1 noche para evitar totales en cero
     public function getNightsAttribute(): int
     {
-        return $this->check_in_date->diffInDays($this->check_out_date);
+        return max(1, (int) $this->check_in_date->diffInDays($this->check_out_date));
+    }
+
+    public function getRoomTotalAttribute(): float
+    {
+        return $this->nights * (float) $this->rate;
     }
 
     public function getTotalChargesAttribute(): float
     {
-        return $this->charges->sum('amount');
+        return (float) $this->charges->sum('amount');
+    }
+
+    public function getInvoiceTotalAttribute(): float
+    {
+        return $this->room_total + $this->total_charges;
     }
 
     public function generateToken(): void
@@ -87,6 +100,7 @@ class Reservation extends Model
     }
 
     // Scopes
+
     public function scopePending($query)
     {
         return $query->where('status', 'pendiente');

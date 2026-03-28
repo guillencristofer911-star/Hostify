@@ -18,7 +18,7 @@ return new class extends Migration
             $table->decimal('subtotal', 10, 2)->default(0);
             $table->decimal('taxes', 10, 2)->default(0);
             $table->decimal('total', 10, 2);
-            $table->enum('status', ['borrador', 'emitida', 'anulada'])->default('borrador');
+            $table->enum('status', ['borrador', 'emitida', 'pagada', 'anulada'])->default('borrador');
             $table->timestamp('sent_at')->nullable();
             $table->string('sent_to_email', 150)->nullable();
             $table->timestamps();

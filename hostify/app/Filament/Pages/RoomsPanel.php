@@ -2,8 +2,10 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\Reservation;
 use App\Models\Room;
 use BackedEnum;
+use Carbon\Carbon;
 use Filament\Pages\Page;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
@@ -22,7 +24,13 @@ class RoomsPanel extends Page
 
     protected ?string $pollingInterval = '30s';
 
-    public array $openMenus = [];
+    public array  $openMenus  = [];
+    public string $filterDate = '';
+
+    public function mount(): void
+    {
+        $this->filterDate = now()->toDateString();
+    }
 
     public function toggleMenu(string $roomId): void
     {
@@ -37,9 +45,7 @@ class RoomsPanel extends Page
     {
         $allowed = ['libre', 'ocupada', 'sucia', 'no_disponible'];
 
-        if (!in_array($status, $allowed)) {
-            return;
-        }
+        if (!in_array($status, $allowed)) return;
 
         $room = Room::findOrFail($roomId);
         $room->updateStatus($status);
@@ -47,40 +53,94 @@ class RoomsPanel extends Page
         unset($this->openMenus[$roomId]);
 
         $labels = [
-            'libre'         => 'Libre 🟢',
-            'ocupada'       => 'Ocupada 🔴',
-            'sucia'         => 'Sucia 🟡',
-            'no_disponible' => 'No disponible ⚫',
+            'libre'         => 'Libre',
+            'ocupada'       => 'Ocupada',
+            'sucia'         => 'Sucia',
+            'no_disponible' => 'No disponible',
         ];
 
         Notification::make()
-            ->title("Hab. {$room->number} → {$labels[$status]}")
+            ->title("Hab. {$room->number} — {$labels[$status]}")
             ->success()
             ->send();
     }
 
     public function getRooms(): Collection
     {
+        $date = $this->filterDate
+            ? Carbon::parse($this->filterDate)
+            : now();
+
+        // IDs de habitaciones ocupadas en la fecha consultada
+        $occupiedIds = Reservation::whereIn('status', ['activa', 'aprobada'])
+            ->whereDate('check_in_date', '<=', $date)
+            ->whereDate('check_out_date', '>', $date)
+            ->pluck('room_id')
+            ->filter()
+            ->toArray();
+
         return Room::active()
-            ->with(['roomType', 'reservations' => function ($q) {
-                $q->where('status', 'activa')->with('guest');
+            ->with(['roomType', 'reservations' => function ($q) use ($date) {
+                $q->whereIn('status', ['activa', 'aprobada'])
+                  ->whereDate('check_in_date', '<=', $date)
+                  ->whereDate('check_out_date', '>', $date)
+                  ->with('guest');
             }])
             ->orderBy('floor')
             ->orderBy('number')
             ->get()
+            ->each(function ($room) use ($occupiedIds) {
+                // Sobreescribir el status calculado dinámicamente
+                if (in_array($room->id, $occupiedIds)) {
+                    $room->status = 'ocupada';
+                } elseif ($room->status === 'ocupada') {
+                    // Estaba marcada ocupada pero ya no tiene reserva activa en esa fecha
+                    $room->status = 'libre';
+                }
+            })
             ->groupBy('floor');
     }
 
     public function getViewData(): array
     {
+        $date = $this->filterDate
+            ? Carbon::parse($this->filterDate)
+            : now();
+
+        $occupiedIds = Reservation::whereIn('status', ['activa', 'aprobada'])
+            ->whereDate('check_in_date', '<=', $date)
+            ->whereDate('check_out_date', '>', $date)
+            ->pluck('room_id')
+            ->filter()
+            ->toArray();
+
+        $allRooms = Room::active()->with('roomType')->get();
+
+        $libre        = 0;
+        $ocupada      = 0;
+        $sucia        = 0;
+        $no_disponible= 0;
+
+        foreach ($allRooms as $room) {
+            if (in_array($room->id, $occupiedIds)) {
+                $ocupada++;
+            } elseif ($room->status === 'sucia') {
+                $sucia++;
+            } elseif ($room->status === 'no_disponible') {
+                $no_disponible++;
+            } else {
+                $libre++;
+            }
+        }
+
         return [
             'pisos'   => $this->getRooms(),
             'resumen' => [
-                'libre'         => Room::active()->where('status', 'libre')->count(),
-                'ocupada'       => Room::active()->where('status', 'ocupada')->count(),
-                'sucia'         => Room::active()->where('status', 'sucia')->count(),
-                'no_disponible' => Room::active()->where('status', 'no_disponible')->count(),
-                'total'         => Room::active()->count(),
+                'libre'         => $libre,
+                'ocupada'       => $ocupada,
+                'sucia'         => $sucia,
+                'no_disponible' => $no_disponible,
+                'total'         => $allRooms->count(),
             ],
         ];
     }

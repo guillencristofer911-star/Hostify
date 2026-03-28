@@ -66,6 +66,11 @@ class ReservationSeeder extends Seeder
                     'actual_check_out'=> $data['actual_check_out'],
                 ]
             );
+
+            // Sincronizar status físico de la habitación
+            if ($data['status'] === 'activa') {
+                $room->updateStatus('ocupada');
+            }
         }
 
         $this->command->info('19 reservas creadas (checked_out / activa / aprobada / cancelada).');

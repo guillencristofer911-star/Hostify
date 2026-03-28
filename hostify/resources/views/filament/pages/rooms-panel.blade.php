@@ -1,5 +1,25 @@
 <x-filament-panels::page>
 
+{{-- ── FILTRO DE FECHA ─────────────────────────────────────────────── --}}
+<div class="flex items-center gap-3 mb-6 flex-wrap">
+    <label class="text-sm font-medium text-gray-400">Disponibilidad para:</label>
+    <input
+        type="date"
+        wire:model.live="filterDate"
+        class="rounded-lg border border-gray-600 bg-gray-800 px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+    />
+    <button
+        wire:click="$set('filterDate', '{{ now()->toDateString() }}')"
+        class="text-xs text-gray-400 hover:text-white underline transition-colors">
+        Hoy
+    </button>
+    @if($filterDate && $filterDate !== now()->toDateString())
+        <span class="text-xs font-semibold text-primary-400 bg-primary-900/30 border border-primary-700 rounded-full px-3 py-1">
+            Viendo: {{ \Carbon\Carbon::parse($filterDate)->translatedFormat('d M Y') }}
+        </span>
+    @endif
+</div>
+
 {{-- ── KPI CARDS ─────────────────────────────────────────────────── --}}
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
 
@@ -96,9 +116,6 @@
                     };
 
                     $cardBg = match($room->status) {
-                        'libre'         => 'bg-white dark:bg-gray-900 border-slate-100 dark:border-slate-700',
-                        'ocupada'       => 'bg-white dark:bg-gray-900 border-slate-100 dark:border-slate-700',
-                        'sucia'         => 'bg-white dark:bg-gray-900 border-slate-100 dark:border-slate-700',
                         'no_disponible' => 'bg-slate-50 dark:bg-gray-850 border-slate-200 dark:border-slate-700 opacity-70',
                         default         => 'bg-white dark:bg-gray-900 border-slate-100 dark:border-slate-700',
                     };
@@ -172,10 +189,14 @@
                                     <x-heroicon-o-user-circle class="w-3.5 h-3.5 shrink-0 text-rose-400" />
                                     {{ $activeReservation->guest->full_name ?? '—' }}
                                 </p>
-                            @elseif ($room->status === 'sucia' && $room->status_changed_at)
+                                <p class="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1 mt-0.5">
+                                    <x-heroicon-o-arrow-right-end-on-rectangle class="w-3.5 h-3.5 shrink-0" />
+                                    Sale {{ \Carbon\Carbon::parse($activeReservation->check_out_date)->translatedFormat('d M') }}
+                                </p>
+                            @elseif ($room->status === 'sucia')
                                 <p class="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
                                     <x-heroicon-o-clock class="w-3.5 h-3.5 shrink-0" />
-                                    {{ $room->status_changed_at->diffForHumans() }}
+                                    Pendiente de limpieza
                                 </p>
                             @elseif ($room->status === 'libre')
                                 <p class="text-xs text-emerald-500 dark:text-emerald-400 flex items-center gap-1">

@@ -3,20 +3,20 @@
 namespace App\Filament\Resources\Reservations\Tables;
 
 use App\Filament\Resources\Reservations\ReservationResource;
-use App\Models\Invoice;
-use App\Models\Payment;
 use App\Models\Reservation;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class ReservationsTable
 {
@@ -152,7 +152,6 @@ class ReservationsTable
                     ->label('Ver detalle')
                     ->icon('heroicon-o-eye'),
 
-                // APROBAR
                 Action::make('aprobar')
                     ->label('Aprobar')
                     ->icon('heroicon-o-check-circle')
@@ -163,7 +162,8 @@ class ReservationsTable
                     ->modalDescription('La reserva quedará confirmada y lista para registrar entrada.')
                     ->visible(fn (Reservation $record): bool => $record->status === 'pendiente')
                     ->action(function (Reservation $record) {
-                        $record->update(['status' => 'aprobada']);
+                        $record->approve();
+
                         Notification::make()
                             ->title('Reserva aprobada')
                             ->icon('heroicon-o-check-circle')
@@ -171,7 +171,6 @@ class ReservationsTable
                             ->send();
                     }),
 
-                // RECHAZAR
                 Action::make('rechazar')
                     ->label('Rechazar')
                     ->icon('heroicon-o-x-circle')
@@ -180,17 +179,15 @@ class ReservationsTable
                     ->modalHeading('Rechazar reserva')
                     ->modalIcon('heroicon-o-x-circle')
                     ->form([
-                        \Filament\Forms\Components\Textarea::make('rejection_reason')
+                        Textarea::make('rejection_reason')
                             ->label('Motivo de rechazo')
                             ->required()
                             ->rows(3),
                     ])
                     ->visible(fn (Reservation $record): bool => $record->status === 'pendiente')
                     ->action(function (Reservation $record, array $data) {
-                        $record->update([
-                            'status'           => 'rechazada',
-                            'rejection_reason' => $data['rejection_reason'],
-                        ]);
+                        $record->reject($data['rejection_reason']);
+
                         Notification::make()
                             ->title('Reserva rechazada')
                             ->icon('heroicon-o-x-circle')
@@ -198,7 +195,6 @@ class ReservationsTable
                             ->send();
                     }),
 
-                // REGISTRAR ENTRADA
                 Action::make('checkin')
                     ->label('Registrar entrada')
                     ->icon('heroicon-o-arrow-right-on-rectangle')
@@ -211,29 +207,24 @@ class ReservationsTable
                     )
                     ->visible(fn (Reservation $record): bool => $record->status === 'aprobada')
                     ->action(function (Reservation $record) {
-                        if (! $record->room) {
+                        try {
+                            $record->checkin();
+
                             Notification::make()
-                                ->title('Sin habitación asignada')
-                                ->body('Debes editar la reserva y asignar una habitación antes de registrar la entrada.')
-                                ->icon('heroicon-o-exclamation-triangle')
+                                ->title('Entrada registrada')
+                                ->body("Hab. {$record->room->number} — {$record->guest->full_name}")
+                                ->icon('heroicon-o-arrow-right-on-rectangle')
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->title('No se pudo registrar la entrada')
+                                ->body($e->getMessage())
                                 ->danger()
                                 ->send();
-                            return;
                         }
-                        $record->update([
-                            'status'          => 'activa',
-                            'actual_check_in' => now(),
-                        ]);
-                        $record->room->updateStatus('ocupada');
-                        Notification::make()
-                            ->title('Entrada registrada')
-                            ->body("Hab. {$record->room->number} — {$record->guest->full_name}")
-                            ->icon('heroicon-o-arrow-right-on-rectangle')
-                            ->success()
-                            ->send();
                     }),
 
-                // REGISTRAR SALIDA
                 Action::make('checkout')
                     ->label('Registrar salida')
                     ->icon('heroicon-o-arrow-left-on-rectangle')
@@ -250,7 +241,7 @@ class ReservationsTable
                         $grandTotal = $record->invoice_total;
 
                         return [
-                            \Filament\Forms\Components\Placeholder::make('resumen')
+                            Placeholder::make('resumen')
                                 ->label('Resumen de estancia')
                                 ->content(
                                     "Noches: {$nights} × $" . number_format((float) $record->rate, 0, ',', '.') .
@@ -258,13 +249,15 @@ class ReservationsTable
                                     " | Cargos extras: $" . number_format($extraTotal, 0, ',', '.') .
                                     " | Total: $" . number_format($grandTotal, 0, ',', '.')
                                 ),
-                            \Filament\Forms\Components\TextInput::make('amount')
+
+                            TextInput::make('amount')
                                 ->label('Monto recibido')
                                 ->numeric()
                                 ->prefix('$')
                                 ->default(fn () => $grandTotal)
                                 ->required(),
-                            \Filament\Forms\Components\Select::make('method')
+
+                            Select::make('method')
                                 ->label('Método de pago')
                                 ->options([
                                     'efectivo'      => 'Efectivo',
@@ -274,7 +267,8 @@ class ReservationsTable
                                 ->default('efectivo')
                                 ->required()
                                 ->native(false),
-                            \Filament\Forms\Components\Textarea::make('notes')
+
+                            Textarea::make('notes')
                                 ->label('Observaciones')
                                 ->rows(2)
                                 ->placeholder('Opcional'),
@@ -282,39 +276,28 @@ class ReservationsTable
                     })
                     ->visible(fn (Reservation $record): bool => $record->status === 'activa')
                     ->action(function (Reservation $record, array $data) {
-                        DB::transaction(function () use ($record, $data) {
-                            $record->update([
-                                'status'           => 'checked_out',
-                                'actual_check_out' => now(),
-                            ]);
-                            $record->room->updateStatus('sucia');
-                            $subtotal = $record->invoice_total;
-                            Invoice::create([
-                                'reservation_id' => $record->id,
-                                'invoice_number' => Invoice::generateNumber(),
-                                'subtotal'       => $subtotal,
-                                'taxes'          => 0,
-                                'total'          => $subtotal,
-                                'status'         => 'pagada',
-                            ]);
-                            Payment::create([
-                                'reservation_id' => $record->id,
-                                'registered_by'  => Auth::id(),
-                                'amount'         => $data['amount'],
-                                'method'         => $data['method'],
-                                'paid_at'        => now(),
-                                'notes'          => $data['notes'] ?? null,
-                            ]);
-                        });
-                        Notification::make()
-                            ->title('Salida registrada — Factura generada')
-                            ->body("Hab. {$record->room->number} queda pendiente de limpieza")
-                            ->icon('heroicon-o-document-check')
-                            ->success()
-                            ->send();
+                        try {
+                            $record->checkout(
+                                amount: (float) $data['amount'],
+                                method: $data['method'],
+                                notes: $data['notes'] ?? null,
+                            );
+
+                            Notification::make()
+                                ->title('Salida registrada — Factura generada')
+                                ->body("Hab. {$record->room->number} queda pendiente de limpieza")
+                                ->icon('heroicon-o-document-check')
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->title('No se pudo registrar la salida')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
                     }),
 
-                // CANCELAR
                 Action::make('cancelar')
                     ->label('Cancelar reserva')
                     ->icon('heroicon-o-no-symbol')
@@ -326,7 +309,8 @@ class ReservationsTable
                         in_array($record->status, ['pendiente', 'aprobada'])
                     )
                     ->action(function (Reservation $record) {
-                        $record->update(['status' => 'cancelada']);
+                        $record->cancel();
+
                         Notification::make()
                             ->title('Reserva cancelada')
                             ->icon('heroicon-o-no-symbol')

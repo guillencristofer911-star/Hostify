@@ -61,4 +61,12 @@ class ShiftClose extends Model
             'total_card_system' => $this->payments()->card()->sum('amount'),
         ]);
     }
+
+    // Agregar dentro de ShiftClose model:
+    public static function openForUser(string $userId): ?string
+    {
+        return self::where('status', 'abierto')
+            ->where('opened_by', $userId)
+            ->value('id');
+    }
 }

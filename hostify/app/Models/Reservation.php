@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class Reservation extends Model
@@ -15,9 +16,17 @@ class Reservation extends Model
     use HasUuids, SoftDeletes;
 
     protected $fillable = [
-        'guest_id', 'room_id', 'created_by', 'source', 'status',
-        'check_in_date', 'check_out_date', 'actual_check_in',
-        'actual_check_out', 'rate', 'pre_register_token',
+        'guest_id',
+        'room_id',
+        'created_by',
+        'source',
+        'status',
+        'check_in_date',
+        'check_out_date',
+        'actual_check_in',
+        'actual_check_out',
+        'rate',
+        'pre_register_token',
         'rejection_reason',
     ];
 
@@ -28,8 +37,6 @@ class Reservation extends Model
         'actual_check_out' => 'datetime',
         'rate'             => 'decimal:2',
     ];
-
-    // Relaciones
 
     public function guest(): BelongsTo
     {
@@ -71,9 +78,6 @@ class Reservation extends Model
         return $this->hasMany(Incident::class);
     }
 
-    // Helpers
-
-    // Mínimo 1 noche para evitar totales en cero
     public function getNightsAttribute(): int
     {
         return max(1, (int) $this->check_in_date->diffInDays($this->check_out_date));
@@ -94,12 +98,108 @@ class Reservation extends Model
         return $this->room_total + $this->total_charges;
     }
 
-    public function generateToken(): void
+    public function approve(): void
     {
-        $this->update(['pre_register_token' => Str::random(64)]);
+        if ($this->status !== 'pendiente') {
+            throw new \DomainException('Solo se pueden aprobar reservas pendientes.');
+        }
+
+        $this->update([
+            'status' => 'aprobada',
+        ]);
     }
 
-    // Scopes
+    public function reject(string $reason): void
+    {
+        if ($this->status !== 'pendiente') {
+            throw new \DomainException('Solo se pueden rechazar reservas pendientes.');
+        }
+
+        $this->update([
+            'status'           => 'rechazada',
+            'rejection_reason' => $reason,
+        ]);
+    }
+
+    public function cancel(): void
+    {
+        if (! in_array($this->status, ['pendiente', 'aprobada'])) {
+            throw new \DomainException('Solo se pueden cancelar reservas pendientes o aprobadas.');
+        }
+
+        $this->update([
+            'status' => 'cancelada',
+        ]);
+    }
+
+    public function checkin(): void
+    {
+        $this->loadMissing(['room', 'guest']);
+
+        if ($this->status !== 'aprobada') {
+            throw new \DomainException('Solo se puede registrar entrada en reservas aprobadas.');
+        }
+
+        if (! $this->room) {
+            throw new \DomainException('La reserva no tiene habitación asignada.');
+        }
+
+        $this->update([
+            'status'          => 'activa',
+            'actual_check_in' => now(),
+        ]);
+
+        $this->room->updateStatus('ocupada');
+    }
+
+    public function checkout(float $amount, string $method, ?string $notes = null): void
+    {
+        $this->loadMissing(['room', 'charges', 'invoice']);
+
+        if ($this->status !== 'activa') {
+            throw new \DomainException('Solo se puede registrar salida en reservas activas.');
+        }
+
+        if (! $this->room) {
+            throw new \DomainException('La reserva no tiene habitación asignada.');
+        }
+
+        if ($this->invoice) {
+            throw new \DomainException('La reserva ya tiene una factura generada.');
+        }
+
+        $subtotal = $this->invoice_total;
+
+        $this->update([
+            'status'           => 'checked_out',
+            'actual_check_out' => now(),
+        ]);
+
+        $this->room->updateStatus('sucia');
+
+        $this->invoice()->create([
+            'invoice_number' => Invoice::generateNumber(),
+            'subtotal'       => $subtotal,
+            'taxes'          => 0,
+            'total'          => $subtotal,
+            'status'         => 'pagada',
+        ]);
+
+        $this->payments()->create([
+            'registered_by' => Auth::id(),
+            'amount'        => $amount,
+            'method'        => $method,
+            'paid_at'       => now(),
+            'notes'         => $notes,
+        ]);
+    }
+
+    public function generateToken(): void
+    {
+        $this->update([
+            'pre_register_token' => Str::random(64),
+        ]);
+    }
 
     public function scopePending($query)
     {

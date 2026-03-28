@@ -18,30 +18,34 @@ class RoomForm
                 ->label('Tipo de habitación')
                 ->options(RoomType::active()->pluck('name', 'id'))
                 ->searchable()
-                ->required(),
+                ->required()
+                ->native(false),
 
             TextInput::make('number')
                 ->label('Número de habitación')
                 ->required()
                 ->maxLength(10)
                 ->unique(ignoreRecord: true)
-                ->placeholder('101, A2, SUITE-1...'),
+                ->placeholder('101, A2, SUITE-1...')
+                ->prefixIcon('heroicon-o-home'),
 
             TextInput::make('floor')
                 ->label('Piso')
                 ->numeric()
-                ->minValue(1),
+                ->minValue(1)
+                ->prefixIcon('heroicon-o-building-office'),
 
             Select::make('status')
                 ->label('Estado')
                 ->options([
-                    'libre'         => '🟢 Libre',
-                    'sucia'         => '🟡 Sucia',
-                    'ocupada'       => '🔴 Ocupada',
-                    'no_disponible' => '⚫ No disponible',
+                    'libre'         => 'Libre',
+                    'sucia'         => 'Sucia',
+                    'ocupada'       => 'Ocupada',
+                    'no_disponible' => 'No disponible',
                 ])
                 ->default('libre')
-                ->required(),
+                ->required()
+                ->native(false),
 
             Toggle::make('is_active')
                 ->label('Activa')

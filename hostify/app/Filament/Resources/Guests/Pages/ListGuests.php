@@ -13,7 +13,9 @@ class ListGuests extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+                ->label('Nuevo huésped')
+                ->icon('heroicon-o-user-plus'),
         ];
     }
 }

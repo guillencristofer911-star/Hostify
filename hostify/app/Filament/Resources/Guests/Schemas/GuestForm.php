@@ -16,7 +16,8 @@ class GuestForm
             TextInput::make('full_name')
                 ->label('Nombre completo')
                 ->required()
-                ->maxLength(120),
+                ->maxLength(120)
+                ->prefixIcon('heroicon-o-user'),
 
             Select::make('document_type')
                 ->label('Tipo de documento')
@@ -26,27 +27,32 @@ class GuestForm
                     'Pasaporte' => 'Pasaporte',
                     'NIT'       => 'NIT',
                 ])
-                ->required(),
+                ->required()
+                ->native(false),
 
             TextInput::make('document_number')
                 ->label('Número de documento')
                 ->required()
                 ->unique(ignoreRecord: true)
-                ->maxLength(30),
+                ->maxLength(30)
+                ->prefixIcon('heroicon-o-identification'),
 
             TextInput::make('phone')
                 ->label('Teléfono')
                 ->tel()
-                ->maxLength(20),
+                ->maxLength(20)
+                ->prefixIcon('heroicon-o-phone'),
 
             TextInput::make('email')
-                ->label('Email')
+                ->label('Correo electrónico')
                 ->email()
-                ->maxLength(150),
+                ->maxLength(150)
+                ->prefixIcon('heroicon-o-envelope'),
 
             TextInput::make('nationality')
                 ->label('Nacionalidad')
-                ->maxLength(60),
+                ->maxLength(60)
+                ->prefixIcon('heroicon-o-flag'),
 
             Toggle::make('is_active')
                 ->label('Activo')

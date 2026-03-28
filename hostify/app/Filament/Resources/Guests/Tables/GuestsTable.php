@@ -18,31 +18,37 @@ class GuestsTable
         return $table
             ->columns([
                 TextColumn::make('full_name')
-                    ->label('Nombre')
+                    ->label('Nombre completo')
                     ->searchable()
                     ->sortable()
-                    ->weight('bold'),
+                    ->weight('bold')
+                    ->icon('heroicon-o-user'),
 
                 TextColumn::make('document_type')
                     ->label('Tipo doc.')
-                    ->badge(),
+                    ->badge()
+                    ->icon('heroicon-o-identification'),
 
                 TextColumn::make('document_number')
                     ->label('Documento')
-                    ->searchable(),
+                    ->searchable()
+                    ->icon('heroicon-o-hashtag'),
 
                 TextColumn::make('phone')
-                    ->label('Teléfono'),
+                    ->label('Teléfono')
+                    ->icon('heroicon-o-phone'),
 
                 TextColumn::make('email')
-                    ->label('Email')
-                    ->searchable(),
+                    ->label('Correo electrónico')
+                    ->searchable()
+                    ->icon('heroicon-o-envelope'),
 
                 TextColumn::make('reservations_count')
                     ->label('Reservas')
                     ->counts('reservations')
                     ->badge()
-                    ->color('info'),
+                    ->color('info')
+                    ->icon('heroicon-o-calendar-days'),
 
                 IconColumn::make('is_active')
                     ->label('Activo')
@@ -50,15 +56,20 @@ class GuestsTable
             ])
             ->filters([
                 TernaryFilter::make('is_active')
-                    ->label('Estado'),
+                    ->label('Estado activo'),
             ])
             ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
+                EditAction::make()
+                    ->label('Editar')
+                    ->icon('heroicon-o-pencil-square'),
+
+                DeleteAction::make()
+                    ->label('Eliminar')
+                    ->icon('heroicon-o-trash'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()->label('Eliminar seleccionados'),
                 ]),
             ]);
     }

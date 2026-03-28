@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\RoomStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,13 +15,15 @@ class CleaningSession extends Model
     protected $fillable = [
         'room_id', 'assigned_to', 'reservation_id',
         'status', 'started_at', 'finished_at',
-        'duration_minutes', 'photo_after_url', 'notes'
+        'duration_minutes', 'photo_after_url', 'notes',
     ];
 
     protected $casts = [
         'started_at'  => 'datetime',
         'finished_at' => 'datetime',
     ];
+
+    //  Relaciones 
 
     public function room(): BelongsTo
     {
@@ -47,16 +50,21 @@ class CleaningSession extends Model
         return $this->hasMany(Incident::class);
     }
 
-    // Calcular duración RF-20
+    //  Acciones de negocio 
+
+
     public function finish(): void
     {
+        $this->loadMissing('room');
+
         $finished = now();
+
         $this->update([
             'status'           => 'terminada',
             'finished_at'      => $finished,
             'duration_minutes' => $this->started_at->diffInMinutes($finished),
         ]);
-        // Actualizar estado habitación
-        $this->room->updateStatus('libre');
+
+        $this->room->updateStatus(RoomStatus::Libre);
     }
 }

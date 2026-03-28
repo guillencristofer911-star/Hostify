@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ShiftCloseStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,7 +32,10 @@ class ShiftClose extends Model
         'difference'         => 'decimal:2',
         'margin_threshold'   => 'decimal:2',
         'within_margin'      => 'boolean',
+        'status'             => ShiftCloseStatus::class,
     ];
+
+    //  Relaciones 
 
     public function openedBy(): BelongsTo
     {
@@ -53,19 +57,25 @@ class ShiftClose extends Model
         return $this->hasMany(Payment::class);
     }
 
-    // Calcular totales RF-30
-    public function calculateTotals(): void
+    //  Acciones de negocio 
+
+
+    public function calculateTotals(): static
     {
         $this->update([
             'total_cash_system' => $this->payments()->cash()->sum('amount'),
             'total_card_system' => $this->payments()->card()->sum('amount'),
         ]);
+
+        return $this;
     }
 
-    // Agregar dentro de ShiftClose model:
+    //  Helpers estáticos 
+
+
     public static function openForUser(string $userId): ?string
     {
-        return self::where('status', 'abierto')
+        return self::where('status', ShiftCloseStatus::Abierto)
             ->where('opened_by', $userId)
             ->value('id');
     }

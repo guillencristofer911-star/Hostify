@@ -107,6 +107,7 @@ class Reservation extends Model
 
     //  Acciones de negocio 
 
+
     public function approve(): void
     {
         if ($this->status !== ReservationStatus::Pendiente) {
@@ -173,7 +174,8 @@ class Reservation extends Model
             throw new \DomainException('La reserva ya tiene una factura generada.');
         }
 
-        $subtotal = $this->invoice_total;
+        $subtotal      = $this->invoice_total;
+        $shiftCloseId  = ShiftClose::openForUser((string) Auth::id());
 
         $this->update([
             'status'           => ReservationStatus::CheckedOut,
@@ -191,11 +193,12 @@ class Reservation extends Model
         ]);
 
         $this->payments()->create([
-            'registered_by' => Auth::id(),
-            'amount'        => $amount,
-            'method'        => $method,
-            'paid_at'       => now(),
-            'notes'         => $notes,
+            'registered_by'  => Auth::id(),
+            'shift_close_id' => $shiftCloseId,
+            'amount'         => $amount,
+            'method'         => $method,
+            'paid_at'        => now(),
+            'notes'          => $notes,
         ]);
     }
 

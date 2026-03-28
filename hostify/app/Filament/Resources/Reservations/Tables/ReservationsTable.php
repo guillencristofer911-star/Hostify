@@ -216,7 +216,7 @@ class ReservationsTable
                                 ->icon('heroicon-o-arrow-right-on-rectangle')
                                 ->success()
                                 ->send();
-                        } catch (\Throwable $e) {
+                        } catch (\DomainException $e) {
                             Notification::make()
                                 ->title('No se pudo registrar la entrada')
                                 ->body($e->getMessage())
@@ -280,7 +280,7 @@ class ReservationsTable
                             $record->checkout(
                                 amount: (float) $data['amount'],
                                 method: $data['method'],
-                                notes: $data['notes'] ?? null,
+                                notes:  $data['notes'] ?? null,
                             );
 
                             Notification::make()
@@ -289,7 +289,7 @@ class ReservationsTable
                                 ->icon('heroicon-o-document-check')
                                 ->success()
                                 ->send();
-                        } catch (\Throwable $e) {
+                        } catch (\DomainException $e) {
                             Notification::make()
                                 ->title('No se pudo registrar la salida')
                                 ->body($e->getMessage())

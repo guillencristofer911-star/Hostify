@@ -45,7 +45,9 @@ class RoomsPanel extends Page
     {
         $allowed = ['libre', 'ocupada', 'sucia', 'no_disponible'];
 
-        if (!in_array($status, $allowed)) return;
+        if (! in_array($status, $allowed)) {
+            return;
+        }
 
         $room = Room::findOrFail($roomId);
         $room->updateStatus($status);
@@ -67,17 +69,8 @@ class RoomsPanel extends Page
 
     public function getRooms(): Collection
     {
-        $date = $this->filterDate
-            ? Carbon::parse($this->filterDate)
-            : now();
-
-        // IDs de habitaciones ocupadas en la fecha consultada
-        $occupiedIds = Reservation::whereIn('status', ['activa', 'aprobada'])
-            ->whereDate('check_in_date', '<=', $date)
-            ->whereDate('check_out_date', '>', $date)
-            ->pluck('room_id')
-            ->filter()
-            ->toArray();
+        $date        = $this->parsedDate();
+        $occupiedIds = $this->occupiedIds($date);
 
         return Room::active()
             ->with(['roomType', 'reservations' => function ($q) use ($date) {
@@ -90,11 +83,9 @@ class RoomsPanel extends Page
             ->orderBy('number')
             ->get()
             ->each(function ($room) use ($occupiedIds) {
-                // Sobreescribir el status calculado dinámicamente
                 if (in_array($room->id, $occupiedIds)) {
                     $room->status = 'ocupada';
                 } elseif ($room->status === 'ocupada') {
-                    // Estaba marcada ocupada pero ya no tiene reserva activa en esa fecha
                     $room->status = 'libre';
                 }
             })
@@ -103,23 +94,14 @@ class RoomsPanel extends Page
 
     public function getViewData(): array
     {
-        $date = $this->filterDate
-            ? Carbon::parse($this->filterDate)
-            : now();
+        $date        = $this->parsedDate();
+        $occupiedIds = $this->occupiedIds($date);
+        $allRooms    = Room::active()->with('roomType')->get();
 
-        $occupiedIds = Reservation::whereIn('status', ['activa', 'aprobada'])
-            ->whereDate('check_in_date', '<=', $date)
-            ->whereDate('check_out_date', '>', $date)
-            ->pluck('room_id')
-            ->filter()
-            ->toArray();
-
-        $allRooms = Room::active()->with('roomType')->get();
-
-        $libre        = 0;
-        $ocupada      = 0;
-        $sucia        = 0;
-        $no_disponible= 0;
+        $libre         = 0;
+        $ocupada       = 0;
+        $sucia         = 0;
+        $no_disponible = 0;
 
         foreach ($allRooms as $room) {
             if (in_array($room->id, $occupiedIds)) {
@@ -143,5 +125,24 @@ class RoomsPanel extends Page
                 'total'         => $allRooms->count(),
             ],
         ];
+    }
+
+    //  Helpers privados 
+
+    private function parsedDate(): Carbon
+    {
+        return $this->filterDate
+            ? Carbon::parse($this->filterDate)
+            : now();
+    }
+
+    private function occupiedIds(Carbon $date): array
+    {
+        return Reservation::whereIn('status', ['activa', 'aprobada'])
+            ->whereDate('check_in_date', '<=', $date)
+            ->whereDate('check_out_date', '>', $date)
+            ->pluck('room_id')
+            ->filter()
+            ->toArray();
     }
 }

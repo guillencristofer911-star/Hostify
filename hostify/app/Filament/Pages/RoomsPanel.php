@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Enums\ReservationStatus;
 use App\Enums\RoomStatus;
 use App\Models\Reservation;
 use App\Models\Room;
@@ -65,10 +66,13 @@ class RoomsPanel extends Page
         $occupiedIds = $this->occupiedIds($date);
 
         return Room::active()
-            ->with(['roomType', 'reservations' => function ($q) use ($date) {
-                $q->whereIn('status', ['activa', 'aprobada'])
-                  ->whereDate('check_in_date', '<=', $date)
-                  ->whereDate('check_out_date', '>', $date)
+            ->with(['roomType', 'reservations' => function ($q) {
+                $q->whereIn('status', [
+                      ReservationStatus::Activa->value,
+                      ReservationStatus::Aprobada->value,
+                  ])
+                  ->whereDate('check_in_date', '<=', $this->parsedDate())
+                  ->whereDate('check_out_date', '>', $this->parsedDate())
                   ->with('guest');
             }])
             ->orderBy('floor')
@@ -126,7 +130,10 @@ class RoomsPanel extends Page
 
     private function occupiedIds(Carbon $date): array
     {
-        return Reservation::whereIn('status', ['activa', 'aprobada'])
+        return Reservation::whereIn('status', [
+                ReservationStatus::Activa->value,
+                ReservationStatus::Aprobada->value,
+            ])
             ->whereDate('check_in_date', '<=', $date)
             ->whereDate('check_out_date', '>', $date)
             ->pluck('room_id')

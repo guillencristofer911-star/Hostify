@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ReservationStatus;
+use App\Enums\RoomStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -153,7 +154,7 @@ class Reservation extends Model
             'actual_check_in' => now(),
         ]);
 
-        $this->room->updateStatus('ocupada');
+        $this->room->updateStatus(RoomStatus::Ocupada);
     }
 
     public function checkout(float $amount, string $method, ?string $notes = null): void
@@ -179,7 +180,7 @@ class Reservation extends Model
             'actual_check_out' => now(),
         ]);
 
-        $this->room->updateStatus('sucia');
+        $this->room->updateStatus(RoomStatus::Sucia);
 
         $this->invoice()->create([
             'invoice_number' => Invoice::generateNumber(),

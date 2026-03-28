@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ShiftClose extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $fillable = [
         'opened_by', 'closed_by', 'validated_by',
@@ -59,7 +60,6 @@ class ShiftClose extends Model
 
     //  Acciones de negocio 
 
-
     public function calculateTotals(): static
     {
         $this->update([
@@ -71,7 +71,6 @@ class ShiftClose extends Model
     }
 
     //  Helpers estáticos 
-
 
     public static function openForUser(string $userId): ?string
     {

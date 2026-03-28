@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('charges', function (Blueprint $table) {
@@ -19,6 +16,7 @@ return new class extends Migration
             $table->string('description', 200);
             $table->decimal('amount', 10, 2);
             $table->timestamp('charged_at');
+            $table->softDeletes();
             $table->timestamps();
 
             $table->index('reservation_id');
@@ -26,9 +24,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('charges');

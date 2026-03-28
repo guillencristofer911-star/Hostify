@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('shift_closes', function (Blueprint $table) {
@@ -28,15 +25,13 @@ return new class extends Migration
             $table->timestamp('validated_at')->nullable();
             $table->text('digital_signature')->nullable();
             $table->enum('status', ['abierto', 'cerrado', 'validado'])->default('abierto');
+            $table->softDeletes();
             $table->timestamps();
 
             $table->index(['opened_by', 'shift_start']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('shift_closes');

@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('cleaning_sessions', function (Blueprint $table) {
@@ -22,15 +19,13 @@ return new class extends Migration
             $table->integer('duration_minutes')->nullable();
             $table->string('photo_after_url', 500)->nullable();
             $table->text('notes')->nullable();
+            $table->softDeletes();
             $table->timestamps();
 
             $table->index(['room_id', 'status']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('cleaning_sessions');

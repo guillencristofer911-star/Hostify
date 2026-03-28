@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CleaningSession extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $fillable = [
         'room_id', 'assigned_to', 'reservation_id',
@@ -51,7 +52,6 @@ class CleaningSession extends Model
     }
 
     //  Acciones de negocio 
-
 
     public function finish(): void
     {

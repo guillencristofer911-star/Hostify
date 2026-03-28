@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Reservations\Pages;
 
+use App\Enums\ReservationStatus;
 use App\Filament\Resources\Reservations\ReservationResource;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
@@ -28,7 +29,7 @@ class ViewReservation extends ViewRecord
                 ->requiresConfirmation()
                 ->modalHeading('Aprobar reserva')
                 ->modalDescription('La reserva quedará confirmada y lista para registrar entrada.')
-                ->visible(fn () => $this->record->status === 'pendiente')
+                ->visible(fn () => $this->record->status === ReservationStatus::Pendiente)
                 ->action(function () {
                     try {
                         $this->record->approve();
@@ -57,7 +58,7 @@ class ViewReservation extends ViewRecord
                         ->required()
                         ->rows(3),
                 ])
-                ->visible(fn () => $this->record->status === 'pendiente')
+                ->visible(fn () => $this->record->status === ReservationStatus::Pendiente)
                 ->action(function (array $data) {
                     try {
                         $this->record->reject($data['rejection_reason']);
@@ -85,7 +86,7 @@ class ViewReservation extends ViewRecord
                     'Huésped: ' . $this->record->guest->full_name .
                     ' — Hab. ' . ($this->record->room?->number ?? 'Sin asignar')
                 )
-                ->visible(fn () => $this->record->status === 'aprobada')
+                ->visible(fn () => $this->record->status === ReservationStatus::Aprobada)
                 ->action(function () {
                     try {
                         $this->record->checkin();
@@ -153,7 +154,7 @@ class ViewReservation extends ViewRecord
                             ->placeholder('Opcional'),
                     ];
                 })
-                ->visible(fn () => $this->record->status === 'activa')
+                ->visible(fn () => $this->record->status === ReservationStatus::Activa)
                 ->action(function (array $data) {
                     try {
                         $this->record->checkout(
@@ -182,7 +183,10 @@ class ViewReservation extends ViewRecord
                 ->color('danger')
                 ->requiresConfirmation()
                 ->modalHeading('Cancelar reserva')
-                ->visible(fn () => in_array($this->record->status, ['pendiente', 'aprobada']))
+                ->visible(fn () => in_array($this->record->status, [
+                    ReservationStatus::Pendiente,
+                    ReservationStatus::Aprobada,
+                ]))
                 ->action(function () {
                     try {
                         $this->record->cancel();
@@ -203,10 +207,7 @@ class ViewReservation extends ViewRecord
             EditAction::make()
                 ->label('Editar datos')
                 ->icon('heroicon-o-pencil-square')
-                ->visible(fn () => ! in_array(
-                    $this->record->status,
-                    ['checked_out', 'rechazada', 'cancelada']
-                )),
+                ->visible(fn () => ! $this->record->status->isFinal()),
         ];
     }
 }

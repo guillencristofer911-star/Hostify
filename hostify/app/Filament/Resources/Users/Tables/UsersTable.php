@@ -18,44 +18,53 @@ class UsersTable
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Nombre')
+                    ->label('Nombre completo')
                     ->searchable()
                     ->sortable()
-                    ->weight('bold'),
+                    ->weight('bold')
+                    ->icon('heroicon-o-user'),
 
                 TextColumn::make('email')
-                    ->label('Email')
-                    ->searchable(),
+                    ->label('Correo electrónico')
+                    ->searchable()
+                    ->icon('heroicon-o-envelope'),
 
                 TextColumn::make('phone')
-                    ->label('Teléfono'),
+                    ->label('Teléfono')
+                    ->icon('heroicon-o-phone'),
 
                 TextColumn::make('roles.name')
                     ->label('Rol')
                     ->badge()
-                    ->color('warning'),
+                    ->color('warning')
+                    ->icon('heroicon-o-shield-check'),
 
                 IconColumn::make('is_active')
                     ->label('Activo')
                     ->boolean(),
 
                 TextColumn::make('created_at')
-                    ->label('Creado')
+                    ->label('Registrado')
                     ->dateTime('d/m/Y')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 TernaryFilter::make('is_active')
-                    ->label('Estado'),
+                    ->label('Estado activo'),
             ])
             ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
+                EditAction::make()
+                    ->label('Editar')
+                    ->icon('heroicon-o-pencil-square'),
+
+                DeleteAction::make()
+                    ->label('Eliminar')
+                    ->icon('heroicon-o-trash'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()->label('Eliminar seleccionados'),
                 ]),
             ]);
     }

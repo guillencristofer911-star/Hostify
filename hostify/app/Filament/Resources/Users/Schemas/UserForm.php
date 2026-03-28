@@ -16,25 +16,29 @@ class UserForm
             TextInput::make('name')
                 ->label('Nombre completo')
                 ->required()
-                ->maxLength(255),
+                ->maxLength(255)
+                ->prefixIcon('heroicon-o-user'),
 
             TextInput::make('email')
-                ->label('Email')
+                ->label('Correo electrónico')
                 ->email()
                 ->required()
                 ->unique(ignoreRecord: true)
-                ->maxLength(255),
+                ->maxLength(255)
+                ->prefixIcon('heroicon-o-envelope'),
 
             TextInput::make('phone')
                 ->label('Teléfono')
                 ->tel()
-                ->maxLength(20),
+                ->maxLength(20)
+                ->prefixIcon('heroicon-o-phone'),
 
             Select::make('roles')
                 ->label('Rol')
                 ->relationship('roles', 'name')
                 ->preload()
-                ->searchable(),
+                ->searchable()
+                ->native(false),
 
             Toggle::make('is_active')
                 ->label('Activo')
@@ -46,7 +50,8 @@ class UserForm
                 ->dehydrateStateUsing(fn ($state) => Hash::make($state))
                 ->dehydrated(fn ($state) => filled($state))
                 ->required(fn (string $operation): bool => $operation === 'create')
-                ->maxLength(255),
+                ->maxLength(255)
+                ->prefixIcon('heroicon-o-lock-closed'),
         ]);
     }
 }

@@ -20,33 +20,39 @@ class InvoicesTable
                     ->searchable()
                     ->sortable()
                     ->weight('bold')
-                    ->icon('heroicon-o-document-text'),
+                    ->icon('heroicon-o-document-text')
+                    ->toggleable(),
 
                 TextColumn::make('reservation.guest.full_name')
                     ->label('Huésped')
                     ->searchable()
-                    ->icon('heroicon-o-user'),
+                    ->icon('heroicon-o-user')
+                    ->toggleable(),
 
                 TextColumn::make('reservation.room.number')
                     ->label('Habitación')
                     ->badge()
                     ->color('info')
-                    ->icon('heroicon-o-home'),
+                    ->icon('heroicon-o-home')
+                    ->toggleable(),
 
                 TextColumn::make('subtotal')
                     ->label('Subtotal')
                     ->money('COP')
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(),
 
                 TextColumn::make('taxes')
                     ->label('Impuestos')
-                    ->money('COP'),
+                    ->money('COP')
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('total')
                     ->label('Total')
                     ->money('COP')
                     ->sortable()
-                    ->weight('bold'),
+                    ->weight('bold')
+                    ->toggleable(),
 
                 TextColumn::make('status')
                     ->label('Estado')
@@ -68,13 +74,28 @@ class InvoicesTable
                         'pendiente' => 'Pendiente',
                         'anulada'   => 'Anulada',
                         default     => $state,
-                    }),
+                    })
+                    ->toggleable(),
 
                 TextColumn::make('created_at')
                     ->label('Fecha')
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
-                    ->icon('heroicon-o-calendar'),
+                    ->icon('heroicon-o-calendar')
+                    ->toggleable(),
+
+                TextColumn::make('sent_at')
+                    ->label('Enviada el')
+                    ->dateTime('d/m/Y H:i')
+                    ->placeholder('No enviada')
+                    ->icon('heroicon-o-envelope')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('sent_to_email')
+                    ->label('Email destino')
+                    ->placeholder('—')
+                    ->icon('heroicon-o-at-symbol')
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([

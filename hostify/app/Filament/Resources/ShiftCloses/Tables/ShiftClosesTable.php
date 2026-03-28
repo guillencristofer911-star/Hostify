@@ -23,50 +23,58 @@ class ShiftClosesTable
                 TextColumn::make('openedBy.name')
                     ->label('Recepcionista')
                     ->searchable()
-                    ->icon('heroicon-o-user'),
+                    ->icon('heroicon-o-user')
+                    ->toggleable(),
 
                 TextColumn::make('shift_start')
                     ->label('Inicio turno')
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
-                    ->icon('heroicon-o-play'),
+                    ->icon('heroicon-o-play')
+                    ->toggleable(),
 
                 TextColumn::make('shift_end')
                     ->label('Fin turno')
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->placeholder('En curso')
-                    ->icon('heroicon-o-stop'),
+                    ->icon('heroicon-o-stop')
+                    ->toggleable(),
 
                 TextColumn::make('total_cash_system')
                     ->label('Efectivo sistema')
                     ->money('COP')
-                    ->icon('heroicon-o-banknotes'),
+                    ->icon('heroicon-o-banknotes')
+                    ->toggleable(),
 
                 TextColumn::make('total_card_system')
-                    ->label('Datafono sistema')
+                    ->label('Datáfono sistema')
                     ->money('COP')
-                    ->icon('heroicon-o-credit-card'),
+                    ->icon('heroicon-o-credit-card')
+                    ->toggleable(),
 
                 TextColumn::make('total_cash_counted')
                     ->label('Efectivo contado')
                     ->money('COP')
-                    ->placeholder('—'),
+                    ->placeholder('—')
+                    ->toggleable(),
 
                 TextColumn::make('difference')
                     ->label('Diferencia')
                     ->money('COP')
                     ->placeholder('—')
                     ->color(fn ($record) => match (true) {
-                        $record?->difference === null     => 'gray',
-                        $record?->within_margin === true  => 'success',
-                        default                           => 'danger',
-                    }),
+                        $record?->difference === null    => 'gray',
+                        $record?->within_margin === true => 'success',
+                        default                          => 'danger',
+                    })
+                    ->toggleable(),
 
                 IconColumn::make('within_margin')
                     ->label('En margen')
                     ->boolean()
-                    ->placeholder('—'),
+                    ->placeholder('—')
+                    ->toggleable(),
 
                 TextColumn::make('status')
                     ->label('Estado')
@@ -88,7 +96,26 @@ class ShiftClosesTable
                         'cerrado'  => 'Cerrado',
                         'validado' => 'Validado',
                         default    => $state,
-                    }),
+                    })
+                    ->toggleable(),
+
+                TextColumn::make('validatedBy.name')
+                    ->label('Validado por')
+                    ->placeholder('—')
+                    ->icon('heroicon-o-check-badge')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('validated_at')
+                    ->label('Validado el')
+                    ->dateTime('d/m/Y H:i')
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('observations')
+                    ->label('Observaciones')
+                    ->limit(40)
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('shift_start', 'desc')
             ->filters([

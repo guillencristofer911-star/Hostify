@@ -28,30 +28,35 @@ class ReservationsTable
                     ->searchable()
                     ->sortable()
                     ->weight('bold')
-                    ->icon('heroicon-o-user'),
+                    ->icon('heroicon-o-user')
+                    ->toggleable(),
 
                 TextColumn::make('guest.document_number')
                     ->label('Documento')
                     ->searchable()
-                    ->icon('heroicon-o-identification'),
+                    ->icon('heroicon-o-identification')
+                    ->toggleable(),
 
                 TextColumn::make('room.number')
                     ->label('Habitación')
                     ->badge()
                     ->color('info')
-                    ->icon('heroicon-o-home'),
+                    ->icon('heroicon-o-home')
+                    ->toggleable(),
 
                 TextColumn::make('check_in_date')
                     ->label('Entrada')
                     ->date('d/m/Y')
                     ->sortable()
-                    ->icon('heroicon-o-arrow-right-circle'),
+                    ->icon('heroicon-o-arrow-right-circle')
+                    ->toggleable(),
 
                 TextColumn::make('check_out_date')
                     ->label('Salida')
                     ->date('d/m/Y')
                     ->sortable()
-                    ->icon('heroicon-o-arrow-left-circle'),
+                    ->icon('heroicon-o-arrow-left-circle')
+                    ->toggleable(),
 
                 TextColumn::make('status')
                     ->label('Estado')
@@ -82,12 +87,14 @@ class ReservationsTable
                         'rechazada'   => 'Rechazada',
                         'cancelada'   => 'Cancelada',
                         default       => $state,
-                    }),
+                    })
+                    ->toggleable(),
 
                 TextColumn::make('rate')
                     ->label('Tarifa/noche')
                     ->money('COP')
-                    ->icon('heroicon-o-banknotes'),
+                    ->icon('heroicon-o-banknotes')
+                    ->toggleable(),
 
                 TextColumn::make('source')
                     ->label('Origen')
@@ -106,7 +113,15 @@ class ReservationsTable
                         'manual_reception' => 'Recepción',
                         'web_form'         => 'Web',
                         default            => $state,
-                    }),
+                    })
+                    ->toggleable(isToggledHiddenByDefault: true), // oculta por defecto
+
+                TextColumn::make('created_at')
+                    ->label('Creada')
+                    ->dateTime('d/m/Y H:i')
+                    ->sortable()
+                    ->icon('heroicon-o-calendar')
+                    ->toggleable(isToggledHiddenByDefault: true), // oculta por defecto
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([

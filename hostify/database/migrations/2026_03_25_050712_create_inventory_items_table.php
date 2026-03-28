@@ -6,28 +6,23 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('inventory_items', function (Blueprint $table) {
+        Schema::create('room_inventory', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('name', 100);
-            $table->string('unit', 20);  // "unidad", "paquete"
-            $table->smallInteger('min_stock')->default(5);
-            $table->boolean('is_active')->default(true);
+            $table->foreignUuid('room_id')->constrained()->onDelete('cascade');
+            $table->foreignUuid('item_id')->constrained('inventory_items')->onDelete('cascade');
+            $table->smallInteger('current_quantity')->default(0);
+            $table->softDeletes();
             $table->timestamps();
 
-            $table->index('is_active');
+            $table->unique(['room_id', 'item_id']);
+            $table->index(['room_id', 'item_id']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('inventory_items');
+        Schema::dropIfExists('room_inventory');
     }
 };

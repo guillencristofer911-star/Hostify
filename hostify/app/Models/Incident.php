@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use App\Enums\IncidentStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Incident extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $fillable = [
         'room_id',
@@ -25,6 +27,7 @@ class Incident extends Model
 
     protected $casts = [
         'resolved_at' => 'datetime',
+        'status'      => IncidentStatus::class,
     ];
 
     //  Relaciones 
@@ -58,6 +61,11 @@ class Incident extends Model
 
     public function scopePending($query)
     {
-        return $query->where('status', 'pendiente');
+        return $query->where('status', IncidentStatus::Pendiente);
+    }
+
+    public function scopeOpen($query)
+    {
+        return $query->whereIn('status', [IncidentStatus::Pendiente, IncidentStatus::EnProceso]);
     }
 }

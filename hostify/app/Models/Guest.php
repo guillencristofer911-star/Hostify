@@ -28,13 +28,12 @@ class Guest extends Model
         return $this->hasMany(Reservation::class);
     }
 
- 
     public function stayHistory(): HasMany
     {
         return $this->hasMany(Reservation::class)
                     ->whereIn('status', [
-                        ReservationStatus::Activa->value,
-                        ReservationStatus::CheckedOut->value,
+                        ReservationStatus::Activa,
+                        ReservationStatus::CheckedOut,
                     ]);
     }
 

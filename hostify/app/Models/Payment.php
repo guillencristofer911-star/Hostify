@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentMethod;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,6 +25,7 @@ class Payment extends Model
     protected $casts = [
         'amount'  => 'decimal:2',
         'paid_at' => 'datetime',
+        'method'  => PaymentMethod::class,
     ];
 
     //  Relaciones 
@@ -47,16 +49,16 @@ class Payment extends Model
 
     public function scopeCash($query)
     {
-        return $query->where('method', 'efectivo');
+        return $query->where('method', PaymentMethod::Efectivo);
     }
 
     public function scopeCard($query)
     {
-        return $query->where('method', 'datafono');
+        return $query->where('method', PaymentMethod::Datafono);
     }
 
     public function scopeTransfer($query)
     {
-        return $query->where('method', 'transferencia');
+        return $query->where('method', PaymentMethod::Transferencia);
     }
 }

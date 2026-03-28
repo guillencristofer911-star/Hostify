@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CleaningStatus;
 use App\Enums\RoomStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -22,6 +23,7 @@ class CleaningSession extends Model
     protected $casts = [
         'started_at'  => 'datetime',
         'finished_at' => 'datetime',
+        'status'      => CleaningStatus::class,
     ];
 
     //  Relaciones 
@@ -52,7 +54,6 @@ class CleaningSession extends Model
     }
 
     //  Acciones de negocio 
-
     public function finish(): void
     {
         $this->loadMissing('room');
@@ -60,7 +61,7 @@ class CleaningSession extends Model
         $finished = now();
 
         $this->update([
-            'status'           => 'terminada',
+            'status'           => CleaningStatus::Terminada,
             'finished_at'      => $finished,
             'duration_minutes' => $this->started_at->diffInMinutes($finished),
         ]);

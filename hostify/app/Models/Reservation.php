@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\InvoiceStatus;
 use App\Enums\ReservationStatus;
 use App\Enums\RoomStatus;
 use Illuminate\Database\Eloquent\Model;
@@ -107,7 +108,6 @@ class Reservation extends Model
 
     //  Acciones de negocio 
 
-
     public function approve(): void
     {
         if ($this->status !== ReservationStatus::Pendiente) {
@@ -158,6 +158,11 @@ class Reservation extends Model
         $this->room->updateStatus(RoomStatus::Ocupada);
     }
 
+    /**
+     * @param float  $amount  Monto recibido
+     * @param string $method  Valor de PaymentMethod (efectivo|datafono|transferencia)
+     * @param string|null $notes  Observaciones opcionales
+     */
     public function checkout(float $amount, string $method, ?string $notes = null): void
     {
         $this->loadMissing(['room', 'charges', 'invoice']);
@@ -174,8 +179,8 @@ class Reservation extends Model
             throw new \DomainException('La reserva ya tiene una factura generada.');
         }
 
-        $subtotal      = $this->invoice_total;
-        $shiftCloseId  = ShiftClose::openForUser((string) Auth::id());
+        $subtotal     = $this->invoice_total;
+        $shiftCloseId = ShiftClose::openForUser((string) Auth::id());
 
         $this->update([
             'status'           => ReservationStatus::CheckedOut,
@@ -189,7 +194,7 @@ class Reservation extends Model
             'subtotal'       => $subtotal,
             'taxes'          => 0,
             'total'          => $subtotal,
-            'status'         => 'pagada',
+            'status'         => InvoiceStatus::Pagada,
         ]);
 
         $this->payments()->create([

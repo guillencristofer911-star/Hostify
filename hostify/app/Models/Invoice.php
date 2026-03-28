@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\InvoiceStatus;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -28,6 +29,7 @@ class Invoice extends Model
         'taxes'    => 'decimal:2',
         'total'    => 'decimal:2',
         'sent_at'  => 'datetime',
+        'status'   => InvoiceStatus::class,
     ];
 
     //  Relaciones 

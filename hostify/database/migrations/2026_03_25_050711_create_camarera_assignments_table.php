@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('camarera_assignments', function (Blueprint $table) {
@@ -18,6 +15,7 @@ return new class extends Migration
             $table->date('assigned_date');
             $table->foreignId('assigned_by')->nullable()->constrained('users')->onDelete('set null');
             $table->boolean('is_active')->default(true);
+            $table->softDeletes();
             $table->timestamps();
 
             $table->unique(['user_id', 'room_id', 'assigned_date']);
@@ -25,9 +23,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('camarera_assignments');

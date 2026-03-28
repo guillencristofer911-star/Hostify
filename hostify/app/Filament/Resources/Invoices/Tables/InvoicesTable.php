@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Invoices\Tables;
 
+use App\Enums\InvoiceStatus;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -57,24 +58,9 @@ class InvoicesTable
                 TextColumn::make('status')
                     ->label('Estado')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'pagada'    => 'success',
-                        'pendiente' => 'warning',
-                        'anulada'   => 'danger',
-                        default     => 'gray',
-                    })
-                    ->icon(fn (string $state): string => match ($state) {
-                        'pagada'    => 'heroicon-o-check-circle',
-                        'pendiente' => 'heroicon-o-clock',
-                        'anulada'   => 'heroicon-o-x-circle',
-                        default     => 'heroicon-o-question-mark-circle',
-                    })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'pagada'    => 'Pagada',
-                        'pendiente' => 'Pendiente',
-                        'anulada'   => 'Anulada',
-                        default     => $state,
-                    })
+                    ->color(fn (InvoiceStatus $state): string => $state->color())
+                    ->icon(fn (InvoiceStatus $state): string => $state->icon())
+                    ->formatStateUsing(fn (InvoiceStatus $state): string => $state->label())
                     ->toggleable(),
 
                 TextColumn::make('created_at')
@@ -101,22 +87,23 @@ class InvoicesTable
             ->filters([
                 SelectFilter::make('status')
                     ->label('Estado')
-                    ->options([
-                        'pagada'    => 'Pagada',
-                        'pendiente' => 'Pendiente',
-                        'anulada'   => 'Anulada',
-                    ]),
+                    ->options(InvoiceStatus::options()),
             ])
             ->recordActions([
                 Action::make('ver')
-                    ->label('Ver')
+                    ->label('Ver factura')
                     ->icon('heroicon-o-eye')
                     ->color('info')
                     ->url(fn ($record) => route('filament.admin.resources.invoices.view', $record)),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make()->label('Eliminar seleccionadas'),
+                    DeleteBulkAction::make()
+                        ->label('Eliminar seleccionadas')
+                        ->modalHeading('Eliminar facturas seleccionadas')
+                        ->modalDescription('Esta acción no se puede deshacer.')
+                        ->modalSubmitActionLabel('Sí, eliminar')
+                        ->modalCancelActionLabel('Cancelar'),
                 ]),
             ]);
     }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Reservations\Pages;
 
+use App\Enums\PaymentMethod;
 use App\Enums\ReservationStatus;
 use App\Filament\Resources\Reservations\ReservationResource;
 use Filament\Actions\Action;
@@ -21,7 +22,7 @@ class ViewReservation extends ViewRecord
     {
         return [
 
-            // APROBAR — solo si pendiente
+            // APROBAR
             Action::make('aprobar')
                 ->label('Aprobar reserva')
                 ->icon('heroicon-o-check-circle')
@@ -29,6 +30,8 @@ class ViewReservation extends ViewRecord
                 ->requiresConfirmation()
                 ->modalHeading('Aprobar reserva')
                 ->modalDescription('La reserva quedará confirmada y lista para registrar entrada.')
+                ->modalSubmitActionLabel('Sí, aprobar')
+                ->modalCancelActionLabel('Cancelar')
                 ->visible(fn () => $this->record->status === ReservationStatus::Pendiente)
                 ->action(function () {
                     try {
@@ -46,12 +49,14 @@ class ViewReservation extends ViewRecord
                     }
                 }),
 
-            // RECHAZAR — solo si pendiente
+            // RECHAZAR
             Action::make('rechazar')
                 ->label('Rechazar')
                 ->icon('heroicon-o-x-circle')
                 ->color('danger')
                 ->modalHeading('Rechazar reserva')
+                ->modalSubmitActionLabel('Sí, rechazar')
+                ->modalCancelActionLabel('Cancelar')
                 ->form([
                     Textarea::make('rejection_reason')
                         ->label('Motivo de rechazo')
@@ -75,7 +80,7 @@ class ViewReservation extends ViewRecord
                     }
                 }),
 
-            // REGISTRAR ENTRADA — solo si aprobada
+            // REGISTRAR ENTRADA
             Action::make('checkin')
                 ->label('Registrar entrada')
                 ->icon('heroicon-o-arrow-right-on-rectangle')
@@ -86,6 +91,8 @@ class ViewReservation extends ViewRecord
                     'Huésped: ' . $this->record->guest->full_name .
                     ' — Hab. ' . ($this->record->room?->number ?? 'Sin asignar')
                 )
+                ->modalSubmitActionLabel('Sí, registrar entrada')
+                ->modalCancelActionLabel('Cancelar')
                 ->visible(fn () => $this->record->status === ReservationStatus::Aprobada)
                 ->action(function () {
                     try {
@@ -104,12 +111,14 @@ class ViewReservation extends ViewRecord
                     }
                 }),
 
-            // REGISTRAR SALIDA — solo si activa
+            // REGISTRAR SALIDA
             Action::make('checkout')
                 ->label('Registrar salida')
                 ->icon('heroicon-o-arrow-left-on-rectangle')
                 ->color('warning')
                 ->modalHeading('Registrar salida y cobro')
+                ->modalSubmitActionLabel('Confirmar salida y cobro')
+                ->modalCancelActionLabel('Cancelar')
                 ->modalDescription(fn () =>
                     'Huésped: ' . $this->record->guest->full_name .
                     ' — Hab. ' . $this->record->room?->number
@@ -139,12 +148,8 @@ class ViewReservation extends ViewRecord
 
                         Select::make('method')
                             ->label('Método de pago')
-                            ->options([
-                                'efectivo'      => 'Efectivo',
-                                'datafono'      => 'Datáfono',
-                                'transferencia' => 'Transferencia',
-                            ])
-                            ->default('efectivo')
+                            ->options(PaymentMethod::options())
+                            ->default(PaymentMethod::Efectivo->value)
                             ->required()
                             ->native(false),
 
@@ -176,13 +181,16 @@ class ViewReservation extends ViewRecord
                     }
                 }),
 
-            // CANCELAR — solo si pendiente o aprobada
+            // CANCELAR
             Action::make('cancelar')
                 ->label('Cancelar reserva')
                 ->icon('heroicon-o-no-symbol')
                 ->color('danger')
                 ->requiresConfirmation()
                 ->modalHeading('Cancelar reserva')
+                ->modalDescription('Esta acción no se puede deshacer.')
+                ->modalSubmitActionLabel('Sí, cancelar reserva')
+                ->modalCancelActionLabel('Volver')
                 ->visible(fn () => in_array($this->record->status, [
                     ReservationStatus::Pendiente,
                     ReservationStatus::Aprobada,
@@ -203,7 +211,7 @@ class ViewReservation extends ViewRecord
                     }
                 }),
 
-            // EDITAR — solo en estados no finales
+            // EDITAR
             EditAction::make()
                 ->label('Editar datos')
                 ->icon('heroicon-o-pencil-square')

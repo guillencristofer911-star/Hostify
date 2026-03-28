@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Invoices\Pages;
 
+use App\Enums\InvoiceStatus;
 use App\Filament\Resources\Invoices\InvoiceResource;
 use Filament\Actions\Action;
 use Filament\Infolists\Components\TextEntry;
@@ -40,24 +41,14 @@ class ViewInvoice extends ViewRecord
                     TextEntry::make('status')
                         ->label('Estado')
                         ->badge()
-                        ->color(fn (string $state): string => match ($state) {
-                            'pagada'   => 'success',
-                            'emitida'  => 'info',
-                            'borrador' => 'warning',
-                            'anulada'  => 'danger',
-                            default    => 'gray',
-                        })
-                        ->formatStateUsing(fn (string $state): string => match ($state) {
-                            'pagada'   => 'Pagada',
-                            'emitida'  => 'Emitida',
-                            'borrador' => 'Borrador',
-                            'anulada'  => 'Anulada',
-                            default    => $state,
-                        }),
+                        ->color(fn (InvoiceStatus $state): string => $state->color())
+                        ->icon(fn (InvoiceStatus $state): string => $state->icon())
+                        ->formatStateUsing(fn (InvoiceStatus $state): string => $state->label()),
 
                     TextEntry::make('created_at')
                         ->label('Fecha de emisión')
-                        ->dateTime('d/m/Y H:i'),
+                        ->dateTime('d/m/Y H:i')
+                        ->icon('heroicon-o-calendar'),
                 ]),
 
             Section::make('Huésped')
@@ -69,13 +60,16 @@ class ViewInvoice extends ViewRecord
                         ->weight('bold'),
 
                     TextEntry::make('reservation.guest.document_number')
-                        ->label('Documento'),
+                        ->label('Documento')
+                        ->icon('heroicon-o-identification'),
 
                     TextEntry::make('reservation.guest.phone')
-                        ->label('Teléfono'),
+                        ->label('Teléfono')
+                        ->icon('heroicon-o-phone'),
 
                     TextEntry::make('reservation.guest.email')
-                        ->label('Correo'),
+                        ->label('Correo')
+                        ->icon('heroicon-o-envelope'),
                 ]),
 
             Section::make('Detalle de la estancia')
@@ -92,18 +86,22 @@ class ViewInvoice extends ViewRecord
 
                     TextEntry::make('reservation.check_in_date')
                         ->label('Fecha entrada')
-                        ->date('d/m/Y'),
+                        ->date('d/m/Y')
+                        ->icon('heroicon-o-arrow-right-circle'),
 
                     TextEntry::make('reservation.check_out_date')
                         ->label('Fecha salida')
-                        ->date('d/m/Y'),
+                        ->date('d/m/Y')
+                        ->icon('heroicon-o-arrow-left-circle'),
 
                     TextEntry::make('reservation.nights')
-                        ->label('Noches'),
+                        ->label('Noches')
+                        ->icon('heroicon-o-moon'),
 
                     TextEntry::make('reservation.rate')
                         ->label('Tarifa por noche')
-                        ->money('COP'),
+                        ->money('COP')
+                        ->icon('heroicon-o-banknotes'),
                 ]),
 
             Section::make('Resumen de cobro')

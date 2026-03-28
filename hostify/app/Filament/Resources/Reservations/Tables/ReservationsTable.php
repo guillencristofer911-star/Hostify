@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Reservations\Tables;
 
+use App\Enums\PaymentMethod;
 use App\Enums\ReservationStatus;
 use App\Filament\Resources\Reservations\ReservationResource;
 use App\Models\Reservation;
@@ -130,10 +131,11 @@ class ReservationsTable
                     ->modalHeading('Aprobar reserva')
                     ->modalIcon('heroicon-o-check-circle')
                     ->modalDescription('La reserva quedará confirmada y lista para registrar entrada.')
+                    ->modalSubmitActionLabel('Sí, aprobar')
+                    ->modalCancelActionLabel('Cancelar')
                     ->visible(fn (Reservation $record): bool => $record->status === ReservationStatus::Pendiente)
                     ->action(function (Reservation $record) {
                         $record->approve();
-
                         Notification::make()
                             ->title('Reserva aprobada')
                             ->icon('heroicon-o-check-circle')
@@ -145,9 +147,10 @@ class ReservationsTable
                     ->label('Rechazar')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
-                    ->requiresConfirmation()
                     ->modalHeading('Rechazar reserva')
                     ->modalIcon('heroicon-o-x-circle')
+                    ->modalSubmitActionLabel('Sí, rechazar')
+                    ->modalCancelActionLabel('Cancelar')
                     ->form([
                         Textarea::make('rejection_reason')
                             ->label('Motivo de rechazo')
@@ -157,7 +160,6 @@ class ReservationsTable
                     ->visible(fn (Reservation $record): bool => $record->status === ReservationStatus::Pendiente)
                     ->action(function (Reservation $record, array $data) {
                         $record->reject($data['rejection_reason']);
-
                         Notification::make()
                             ->title('Reserva rechazada')
                             ->icon('heroicon-o-x-circle')
@@ -175,11 +177,12 @@ class ReservationsTable
                     ->modalDescription(fn (Reservation $record) =>
                         "Huésped: {$record->guest->full_name} — Hab. " . ($record->room?->number ?? 'Sin asignar')
                     )
+                    ->modalSubmitActionLabel('Sí, registrar entrada')
+                    ->modalCancelActionLabel('Cancelar')
                     ->visible(fn (Reservation $record): bool => $record->status === ReservationStatus::Aprobada)
                     ->action(function (Reservation $record) {
                         try {
                             $record->checkin();
-
                             Notification::make()
                                 ->title('Entrada registrada')
                                 ->body("Hab. {$record->room->number} — {$record->guest->full_name}")
@@ -204,6 +207,8 @@ class ReservationsTable
                     ->modalDescription(fn (Reservation $record) =>
                         "Huésped: {$record->guest->full_name} — Hab. {$record->room?->number}"
                     )
+                    ->modalSubmitActionLabel('Confirmar salida y cobro')
+                    ->modalCancelActionLabel('Cancelar')
                     ->form(function (Reservation $record) {
                         $nights     = $record->nights;
                         $roomTotal  = $record->room_total;
@@ -229,12 +234,8 @@ class ReservationsTable
 
                             Select::make('method')
                                 ->label('Método de pago')
-                                ->options([
-                                    'efectivo'      => 'Efectivo',
-                                    'datafono'      => 'Datáfono',
-                                    'transferencia' => 'Transferencia',
-                                ])
-                                ->default('efectivo')
+                                ->options(PaymentMethod::options())
+                                ->default(PaymentMethod::Efectivo->value)
                                 ->required()
                                 ->native(false),
 
@@ -252,7 +253,6 @@ class ReservationsTable
                                 method: $data['method'],
                                 notes:  $data['notes'] ?? null,
                             );
-
                             Notification::make()
                                 ->title('Salida registrada — Factura generada')
                                 ->body("Hab. {$record->room->number} queda pendiente de limpieza")
@@ -275,12 +275,14 @@ class ReservationsTable
                     ->requiresConfirmation()
                     ->modalHeading('Cancelar reserva')
                     ->modalIcon('heroicon-o-no-symbol')
+                    ->modalDescription('Esta acción no se puede deshacer.')
+                    ->modalSubmitActionLabel('Sí, cancelar reserva')
+                    ->modalCancelActionLabel('Volver')
                     ->visible(fn (Reservation $record): bool =>
                         in_array($record->status, [ReservationStatus::Pendiente, ReservationStatus::Aprobada])
                     )
                     ->action(function (Reservation $record) {
                         $record->cancel();
-
                         Notification::make()
                             ->title('Reserva cancelada')
                             ->icon('heroicon-o-no-symbol')
@@ -290,11 +292,20 @@ class ReservationsTable
 
                 DeleteAction::make()
                     ->label('Eliminar')
-                    ->icon('heroicon-o-trash'),
+                    ->icon('heroicon-o-trash')
+                    ->modalHeading('Eliminar reserva')
+                    ->modalDescription('Esta acción eliminará la reserva permanentemente.')
+                    ->modalSubmitActionLabel('Sí, eliminar')
+                    ->modalCancelActionLabel('Cancelar'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make()->label('Eliminar seleccionados'),
+                    DeleteBulkAction::make()
+                        ->label('Eliminar seleccionados')
+                        ->modalHeading('Eliminar reservas seleccionadas')
+                        ->modalDescription('Esta acción no se puede deshacer.')
+                        ->modalSubmitActionLabel('Sí, eliminar')
+                        ->modalCancelActionLabel('Cancelar'),
                 ]),
             ]);
     }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ShiftCloses\Pages;
 
+use App\Enums\ShiftCloseStatus;
 use App\Filament\Resources\ShiftCloses\ShiftCloseResource;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -18,71 +19,74 @@ class ViewShiftClose extends ViewRecord
         return $schema->components([
 
             Section::make('Turno')
+                ->icon('heroicon-o-clock')
                 ->columns(3)
                 ->schema([
                     TextEntry::make('created_at')
                         ->label('Registro creado')
-                        ->dateTime('d/m/Y H:i'),
+                        ->dateTime('d/m/Y H:i')
+                        ->icon('heroicon-o-calendar'),
 
                     TextEntry::make('shift_start')
                         ->label('Inicio')
-                        ->dateTime('d/m/Y H:i'),
+                        ->dateTime('d/m/Y H:i')
+                        ->icon('heroicon-o-play'),
 
                     TextEntry::make('shift_end')
                         ->label('Fin')
                         ->dateTime('d/m/Y H:i')
-                        ->placeholder('En curso'),
+                        ->placeholder('En curso')
+                        ->icon('heroicon-o-stop'),
 
                     TextEntry::make('openedBy.name')
                         ->label('Abierto por')
                         ->badge()
-                        ->color('gray'),
+                        ->color('gray')
+                        ->icon('heroicon-o-user'),
 
                     TextEntry::make('closedBy.name')
                         ->label('Cerrado por')
-                        ->placeholder('—'),
+                        ->placeholder('—')
+                        ->icon('heroicon-o-user'),
 
                     TextEntry::make('validatedBy.name')
                         ->label('Validado por')
-                        ->placeholder('—'),
+                        ->placeholder('—')
+                        ->icon('heroicon-o-user'),
 
                     TextEntry::make('status')
                         ->label('Estado')
                         ->badge()
-                        ->color(fn (string $state): string => match ($state) {
-                            'abierto'  => 'warning',
-                            'cerrado'  => 'info',
-                            'validado' => 'success',
-                            default    => 'gray',
-                        })
-                        ->formatStateUsing(fn (string $state): string => match ($state) {
-                            'abierto'  => 'Abierto',
-                            'cerrado'  => 'Cerrado',
-                            'validado' => 'Validado',
-                            default    => $state,
-                        }),
+                        ->color(fn (ShiftCloseStatus $state): string => $state->color())
+                        ->icon(fn (ShiftCloseStatus $state): string => $state->icon())
+                        ->formatStateUsing(fn (ShiftCloseStatus $state): string => $state->label()),
                 ]),
 
             Section::make('Resumen de caja')
+                ->icon('heroicon-o-banknotes')
                 ->columns(2)
                 ->schema([
                     TextEntry::make('total_cash_system')
                         ->label('Efectivo sistema')
-                        ->money('COP'),
+                        ->money('COP')
+                        ->icon('heroicon-o-banknotes'),
 
                     TextEntry::make('total_card_system')
-                        ->label('Datafono sistema')
-                        ->money('COP'),
+                        ->label('Datáfono sistema')
+                        ->money('COP')
+                        ->icon('heroicon-o-credit-card'),
 
                     TextEntry::make('total_cash_counted')
                         ->label('Efectivo contado')
                         ->money('COP')
-                        ->placeholder('—'),
+                        ->placeholder('—')
+                        ->icon('heroicon-o-calculator'),
 
                     TextEntry::make('difference')
                         ->label('Diferencia')
                         ->money('COP')
                         ->placeholder('—')
+                        ->icon('heroicon-o-arrows-right-left')
                         ->color(fn ($record) => match (true) {
                             $record?->difference === null    => 'gray',
                             $record?->within_margin === true => 'success',
@@ -96,10 +100,12 @@ class ViewShiftClose extends ViewRecord
 
                     TextEntry::make('margin_threshold')
                         ->label('Margen tolerancia')
-                        ->money('COP'),
+                        ->money('COP')
+                        ->icon('heroicon-o-adjustments-horizontal'),
                 ]),
 
             Section::make('Observaciones')
+                ->icon('heroicon-o-chat-bubble-left-ellipsis')
                 ->schema([
                     TextEntry::make('observations')
                         ->label('')

@@ -92,17 +92,17 @@ class ListReservations extends ListRecords
             'historial' => Tab::make('Historial')
                 ->icon('heroicon-o-archive-box')
                 ->badge(static fn () => Reservation::whereIn('status', [
-                    ReservationStatus::CheckedOut->value,
-                    ReservationStatus::Cancelada->value,
-                    ReservationStatus::Rechazada->value,
+                    ReservationStatus::CheckedOut,
+                    ReservationStatus::Cancelada,
+                    ReservationStatus::Rechazada,
                 ])->count())
                 ->badgeColor('gray')
                 ->deferBadge()
                 ->modifyQueryUsing(fn (Builder $query) =>
                     $query->whereIn('status', [
-                              ReservationStatus::CheckedOut->value,
-                              ReservationStatus::Cancelada->value,
-                              ReservationStatus::Rechazada->value,
+                              ReservationStatus::CheckedOut,
+                              ReservationStatus::Cancelada,
+                              ReservationStatus::Rechazada,
                           ])
                           ->orderBy('check_out_date', 'desc')
                 ),

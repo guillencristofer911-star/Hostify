@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Reservations\Schemas;
 
 use App\Enums\ReservationStatus;
+use App\Enums\RoomStatus;
 use App\Models\Guest;
 use App\Models\Room;
 use App\Models\Reservation;
@@ -105,8 +106,8 @@ class ReservationForm
 
                     if ($checkIn && $checkOut) {
                         $ocupadas = Reservation::whereIn('status', [
-                                ReservationStatus::Aprobada->value,
-                                ReservationStatus::Activa->value,
+                                ReservationStatus::Aprobada,
+                                ReservationStatus::Activa,
                             ])
                             ->where('check_in_date', '<', $checkOut)
                             ->where('check_out_date', '>', $checkIn)
@@ -115,7 +116,7 @@ class ReservationForm
 
                         $query->whereNotIn('id', $ocupadas);
                     } else {
-                        $query->where('status', 'libre');
+                        $query->where('status', RoomStatus::Libre);
                     }
 
                     return $query

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Rooms\Tables;
 
 use App\Enums\RoomStatus;
+use App\Models\Room;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -65,7 +66,14 @@ class RoomsTable
 
                 SelectFilter::make('floor')
                     ->label('Piso')
-                    ->relationship('floor', 'floor'),
+                    ->options(fn () =>
+                        Room::query()
+                            ->whereNotNull('floor')
+                            ->orderBy('floor')
+                            ->distinct()
+                            ->pluck('floor', 'floor')
+                            ->toArray()
+                    ),
 
                 TernaryFilter::make('is_active')
                     ->label('Activa'),

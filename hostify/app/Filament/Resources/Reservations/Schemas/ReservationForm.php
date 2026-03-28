@@ -28,6 +28,10 @@ class ReservationForm
                             $g->id => $g->full_name . ' — ' . $g->document_number
                         ])
                 )
+                ->getOptionLabelUsing(function ($value) {
+                    $g = Guest::find($value);
+                    return $g ? $g->full_name . ' — ' . $g->document_number : $value;
+                })
                 ->searchable()
                 ->required()
                 ->createOptionForm([
@@ -76,7 +80,7 @@ class ReservationForm
                     $set('room_id', null);
                 }),
 
-            // HABITACIÓN
+            // HABITACIÓN — corregido con getOptionLabelUsing
             Select::make('room_id')
                 ->label('Habitación')
                 ->required()
@@ -104,6 +108,13 @@ class ReservationForm
                             . ' ($' . number_format($r->roomType->base_price, 0, ',', '.') . ')';
                         return [$r->id => $label];
                     });
+                })
+                ->getOptionLabelUsing(function ($value) {
+                    $room = Room::with('roomType')->find($value);
+                    if (! $room) return $value;
+                    return 'Hab. ' . $room->number
+                        . ' — ' . $room->roomType->name
+                        . ' ($' . number_format($room->roomType->base_price, 0, ',', '.') . ')';
                 })
                 ->searchable()
                 ->live()

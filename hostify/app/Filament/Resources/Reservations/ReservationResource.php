@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Reservations;
 use App\Filament\Resources\Reservations\Pages\CreateReservation;
 use App\Filament\Resources\Reservations\Pages\EditReservation;
 use App\Filament\Resources\Reservations\Pages\ListReservations;
+use App\Filament\Resources\Reservations\Pages\ViewReservation;
 use App\Filament\Resources\Reservations\Schemas\ReservationForm;
 use App\Filament\Resources\Reservations\Tables\ReservationsTable;
 use App\Models\Reservation;
@@ -18,8 +19,8 @@ use Filament\Tables\Table;
 class ReservationResource extends Resource
 {
     protected static ?string $model = Reservation::class;
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::CalendarDays;
-    protected static string|UnitEnum|null $navigationGroup      = 'Operaciones';
+    protected static string|BackedEnum|null $navigationIcon       = Heroicon::CalendarDays;
+    protected static string|UnitEnum|null   $navigationGroup      = 'Operaciones';
     protected static ?string $navigationLabel      = 'Reservas';
     protected static ?string $modelLabel           = 'Reserva';
     protected static ?string $pluralModelLabel     = 'Reservas';
@@ -41,6 +42,7 @@ class ReservationResource extends Resource
         return [
             'index'  => ListReservations::route('/'),
             'create' => CreateReservation::route('/create'),
+            'view'   => ViewReservation::route('/{record}'),
             'edit'   => EditReservation::route('/{record}/edit'),
         ];
     }

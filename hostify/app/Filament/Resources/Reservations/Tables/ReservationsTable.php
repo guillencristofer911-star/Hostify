@@ -2,14 +2,15 @@
 
 namespace App\Filament\Resources\Reservations\Tables;
 
+use App\Filament\Resources\Reservations\ReservationResource;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Reservation;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -114,16 +115,19 @@ class ReservationsTable
                         'web_form'         => 'Web',
                         default            => $state,
                     })
-                    ->toggleable(isToggledHiddenByDefault: true), // oculta por defecto
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('created_at')
                     ->label('Creada')
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->icon('heroicon-o-calendar')
-                    ->toggleable(isToggledHiddenByDefault: true), // oculta por defecto
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('created_at', 'desc')
+            ->recordUrl(
+                fn (Reservation $record) => ReservationResource::getUrl('view', ['record' => $record])
+            )
             ->filters([
                 SelectFilter::make('status')
                     ->label('Estado')
@@ -144,6 +148,10 @@ class ReservationsTable
                     ]),
             ])
             ->recordActions([
+                ViewAction::make()
+                    ->label('Ver detalle')
+                    ->icon('heroicon-o-eye'),
+
                 // APROBAR
                 Action::make('aprobar')
                     ->label('Aprobar')
@@ -212,13 +220,11 @@ class ReservationsTable
                                 ->send();
                             return;
                         }
-
                         $record->update([
                             'status'          => 'activa',
                             'actual_check_in' => now(),
                         ]);
                         $record->room->updateStatus('ocupada');
-
                         Notification::make()
                             ->title('Entrada registrada')
                             ->body("Hab. {$record->room->number} — {$record->guest->full_name}")
@@ -252,14 +258,12 @@ class ReservationsTable
                                     " | Cargos extras: $" . number_format($extraTotal, 0, ',', '.') .
                                     " | Total: $" . number_format($grandTotal, 0, ',', '.')
                                 ),
-
                             \Filament\Forms\Components\TextInput::make('amount')
                                 ->label('Monto recibido')
                                 ->numeric()
                                 ->prefix('$')
                                 ->default(fn () => $grandTotal)
                                 ->required(),
-
                             \Filament\Forms\Components\Select::make('method')
                                 ->label('Método de pago')
                                 ->options([
@@ -270,7 +274,6 @@ class ReservationsTable
                                 ->default('efectivo')
                                 ->required()
                                 ->native(false),
-
                             \Filament\Forms\Components\Textarea::make('notes')
                                 ->label('Observaciones')
                                 ->rows(2)
@@ -280,16 +283,12 @@ class ReservationsTable
                     ->visible(fn (Reservation $record): bool => $record->status === 'activa')
                     ->action(function (Reservation $record, array $data) {
                         DB::transaction(function () use ($record, $data) {
-
                             $record->update([
                                 'status'           => 'checked_out',
                                 'actual_check_out' => now(),
                             ]);
-
                             $record->room->updateStatus('sucia');
-
                             $subtotal = $record->invoice_total;
-
                             Invoice::create([
                                 'reservation_id' => $record->id,
                                 'invoice_number' => Invoice::generateNumber(),
@@ -298,7 +297,6 @@ class ReservationsTable
                                 'total'          => $subtotal,
                                 'status'         => 'pagada',
                             ]);
-
                             Payment::create([
                                 'reservation_id' => $record->id,
                                 'registered_by'  => Auth::id(),
@@ -308,7 +306,6 @@ class ReservationsTable
                                 'notes'          => $data['notes'] ?? null,
                             ]);
                         });
-
                         Notification::make()
                             ->title('Salida registrada — Factura generada')
                             ->body("Hab. {$record->room->number} queda pendiente de limpieza")
@@ -336,10 +333,6 @@ class ReservationsTable
                             ->danger()
                             ->send();
                     }),
-
-                EditAction::make()
-                    ->label('Editar')
-                    ->icon('heroicon-o-pencil-square'),
 
                 DeleteAction::make()
                     ->label('Eliminar')

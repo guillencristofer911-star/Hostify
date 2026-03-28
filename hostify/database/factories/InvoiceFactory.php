@@ -14,7 +14,7 @@ class InvoiceFactory extends Factory
         $subtotal = $this->faker->randomFloat(2, 80000, 900000);
 
         return [
-            'invoice_number' => 'FAC-' . strtoupper($this->faker->bothify('####')),
+            'invoice_number' => 'FAC-' . $this->faker->unique()->numerify('######'),
             'subtotal'       => $subtotal,
             'taxes'          => 0,
             'total'          => $subtotal,

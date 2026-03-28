@@ -2,53 +2,44 @@
 
 namespace Database\Seeders;
 
-use App\Enums\InvoiceStatus;
-use App\Enums\ReservationStatus;
+use Illuminate\Database\Seeder;
 use App\Models\Invoice;
 use App\Models\Reservation;
-use Illuminate\Database\Seeder;
 
 class InvoiceSeeder extends Seeder
 {
     public function run(): void
     {
-        // Factura pagada para cada checked_out
-        $checkedOut = Reservation::where('status', ReservationStatus::CheckedOut)
-            ->doesntHave('invoice')
-            ->with('charges')
+
+        $reservations = Reservation::where('status', 'checked_out')
+            ->whereDoesntHave('invoice') 
             ->get();
 
-        foreach ($checkedOut as $reservation) {
-            $subtotal = $reservation->invoice_total;
+        $counter = 1;
 
-            Invoice::factory()->create([
+        foreach ($reservations as $reservation) {
+            // Calcular noches
+            $checkIn  = \Carbon\Carbon::parse($reservation->check_in);
+            $checkOut = \Carbon\Carbon::parse($reservation->check_out);
+            $nights   = max(1, $checkIn->diffInDays($checkOut));
+
+            // Precio por noche desde la habitación
+            $pricePerNight = $reservation->room->price_per_night ?? 80000;
+            $subtotal      = $nights * $pricePerNight;
+            $taxes         = 0;
+            $total         = $subtotal + $taxes;
+
+            Invoice::create([
+                'invoice_number' => 'FAC-' . str_pad($counter++, 6, '0', STR_PAD_LEFT),
                 'reservation_id' => $reservation->id,
                 'subtotal'       => $subtotal,
-                'taxes'          => 0,
-                'total'          => $subtotal,
-                'status'         => InvoiceStatus::Pagada->value,
+                'taxes'          => $taxes,
+                'total'          => $total,
+                'status'         => 'pagada',
             ]);
         }
 
-        // Factura emitida (pendiente de pago) para activas
-        $activas = Reservation::where('status', ReservationStatus::Activa)
-            ->doesntHave('invoice')
-            ->with('charges')
-            ->get();
-
-        foreach ($activas as $reservation) {
-            $subtotal = $reservation->invoice_total;
-
-            Invoice::factory()->create([
-                'reservation_id' => $reservation->id,
-                'subtotal'       => $subtotal,
-                'taxes'          => 0,
-                'total'          => $subtotal,
-                'status'         => InvoiceStatus::Emitida->value,
-            ]);
-        }
-
-        $total = Invoice::count();
-        $this->command->info(" {$total} facturas generadas automáticamente.");
+        $count = $counter - 1;
+        $this->command->info(" {$count} facturas creadas — solo para reservas checked_out.");
     }
 }

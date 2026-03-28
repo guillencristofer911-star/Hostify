@@ -25,9 +25,10 @@ class GuestSeeder extends Seeder
             );
         }
 
-        // 20 huéspedes aleatorios adicionales con Faker
-        Guest::factory()->count(20)->create();
+        // 95 huéspedes aleatorios adicionales con Faker (total ~100)
+        Guest::factory()->count(95)->create();
 
-        $this->command->info(' Huéspedes creados: 5 fijos + 20 aleatorios.');
+        $total = Guest::count();
+        $this->command->info(" {$total} huéspedes creados: 5 fijos + 95 aleatorios.");
     }
 }

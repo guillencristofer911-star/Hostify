@@ -17,16 +17,16 @@ class ShiftCloseSeeder extends Seeder
             return;
         }
 
-        //  1. Turnos validados — últimos 14 días (mañana y tarde) 
+        //  1. Turnos validados — últimos 45 días (2 turnos por día = 90 turnos)
         ShiftClose::factory()
-            ->count(14)
+            ->count(90)
             ->create([
                 'opened_by'    => $users->random()->id,
                 'closed_by'    => $users->random()->id,
                 'validated_by' => $users->random()->id,
             ]);
 
-        //  2. Turno cerrado de ayer — pendiente de validar 
+        //  2. Turno cerrado de ayer — pendiente de validar
         ShiftClose::factory()
             ->cerrado()
             ->create([
@@ -34,8 +34,7 @@ class ShiftCloseSeeder extends Seeder
                 'closed_by' => $users->random()->id,
             ]);
 
-        //  3. Turno abierto HOY — el turno actual 
-        // Solo crear si no existe ya uno abierto
+        //  3. Turno abierto HOY — el turno actual
         $hayAbierto = ShiftClose::where('status', 'abierto')->exists();
 
         if (! $hayAbierto) {
@@ -45,6 +44,6 @@ class ShiftCloseSeeder extends Seeder
         }
 
         $total = ShiftClose::count();
-        $this->command->info(" {$total} turnos creados — 14 validados, 1 cerrado, 1 abierto.");
+        $this->command->info(" {$total} turnos creados — 90 validados, 1 cerrado, 1 abierto.");
     }
 }

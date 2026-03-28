@@ -3,9 +3,6 @@
 namespace App\Filament\Resources\Reservations\Pages;
 
 use App\Filament\Resources\Reservations\ReservationResource;
-use App\Models\Invoice;
-use App\Models\Payment;
-use App\Models\Reservation;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Placeholder;
@@ -14,8 +11,6 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class ViewReservation extends ViewRecord
 {
@@ -25,7 +20,7 @@ class ViewReservation extends ViewRecord
     {
         return [
 
-            //  APROBAR — solo si pendiente
+            // APROBAR — solo si pendiente
             Action::make('aprobar')
                 ->label('Aprobar reserva')
                 ->icon('heroicon-o-check-circle')
@@ -35,14 +30,22 @@ class ViewReservation extends ViewRecord
                 ->modalDescription('La reserva quedará confirmada y lista para registrar entrada.')
                 ->visible(fn () => $this->record->status === 'pendiente')
                 ->action(function () {
-                    $this->record->update(['status' => 'aprobada']);
-                    Notification::make()
-                        ->title('Reserva aprobada')
-                        ->success()->send();
-                    $this->refreshFormData(['status']);
+                    try {
+                        $this->record->approve();
+                        Notification::make()
+                            ->title('Reserva aprobada')
+                            ->success()
+                            ->send();
+                        $this->refreshFormData(['status']);
+                    } catch (\DomainException $e) {
+                        Notification::make()
+                            ->title($e->getMessage())
+                            ->danger()
+                            ->send();
+                    }
                 }),
 
-            //  RECHAZAR — solo si pendiente
+            // RECHAZAR — solo si pendiente
             Action::make('rechazar')
                 ->label('Rechazar')
                 ->icon('heroicon-o-x-circle')
@@ -56,16 +59,22 @@ class ViewReservation extends ViewRecord
                 ])
                 ->visible(fn () => $this->record->status === 'pendiente')
                 ->action(function (array $data) {
-                    $this->record->update([
-                        'status'           => 'rechazada',
-                        'rejection_reason' => $data['rejection_reason'],
-                    ]);
-                    Notification::make()
-                        ->title('Reserva rechazada')
-                        ->warning()->send();
-                    $this->refreshFormData(['status']);
+                    try {
+                        $this->record->reject($data['rejection_reason']);
+                        Notification::make()
+                            ->title('Reserva rechazada')
+                            ->warning()
+                            ->send();
+                        $this->refreshFormData(['status']);
+                    } catch (\DomainException $e) {
+                        Notification::make()
+                            ->title($e->getMessage())
+                            ->danger()
+                            ->send();
+                    }
                 }),
-            //  REGISTRAR ENTRADA — solo si aprobada
+
+            // REGISTRAR ENTRADA — solo si aprobada
             Action::make('checkin')
                 ->label('Registrar entrada')
                 ->icon('heroicon-o-arrow-right-on-rectangle')
@@ -78,26 +87,23 @@ class ViewReservation extends ViewRecord
                 )
                 ->visible(fn () => $this->record->status === 'aprobada')
                 ->action(function () {
-                    if (! $this->record->room) {
+                    try {
+                        $this->record->checkin();
                         Notification::make()
-                            ->title('Sin habitación asignada')
-                            ->body('Edita la reserva y asigna una habitación primero.')
-                            ->danger()->send();
-                        return;
+                            ->title('Entrada registrada')
+                            ->body('Hab. ' . $this->record->room->number)
+                            ->success()
+                            ->send();
+                        $this->refreshFormData(['status']);
+                    } catch (\DomainException $e) {
+                        Notification::make()
+                            ->title($e->getMessage())
+                            ->danger()
+                            ->send();
                     }
-                    $this->record->update([
-                        'status'          => 'activa',
-                        'actual_check_in' => now(),
-                    ]);
-                    $this->record->room->updateStatus('ocupada');
-                    Notification::make()
-                        ->title('Entrada registrada')
-                        ->body('Hab. ' . $this->record->room->number)
-                        ->success()->send();
-                    $this->refreshFormData(['status']);
                 }),
 
-            //  REGISTRAR SALIDA — solo si activa
+            // REGISTRAR SALIDA — solo si activa
             Action::make('checkout')
                 ->label('Registrar salida')
                 ->icon('heroicon-o-arrow-left-on-rectangle')
@@ -118,16 +124,18 @@ class ViewReservation extends ViewRecord
                             ->label('Resumen de estancia')
                             ->content(
                                 "Noches: {$nights} × $" . number_format((float) $this->record->rate, 0, ',', '.') .
-                                " = $" . number_format($roomTotal, 0, ',', '.') .
+                                " = $"  . number_format($roomTotal,  0, ',', '.') .
                                 " | Extras: $" . number_format($extraTotal, 0, ',', '.') .
-                                " | Total: $" . number_format($grandTotal, 0, ',', '.')
+                                " | Total: $"  . number_format($grandTotal, 0, ',', '.')
                             ),
+
                         TextInput::make('amount')
                             ->label('Monto recibido')
                             ->numeric()
                             ->prefix('$')
                             ->default($grandTotal)
                             ->required(),
+
                         Select::make('method')
                             ->label('Método de pago')
                             ->options([
@@ -138,6 +146,7 @@ class ViewReservation extends ViewRecord
                             ->default('efectivo')
                             ->required()
                             ->native(false),
+
                         Textarea::make('notes')
                             ->label('Observaciones')
                             ->rows(2)
@@ -146,39 +155,27 @@ class ViewReservation extends ViewRecord
                 })
                 ->visible(fn () => $this->record->status === 'activa')
                 ->action(function (array $data) {
-                    DB::transaction(function () use ($data) {
-                        $this->record->update([
-                            'status'           => 'checked_out',
-                            'actual_check_out' => now(),
-                        ]);
-                        $this->record->room->updateStatus('sucia');
-
-                        $subtotal = $this->record->invoice_total;
-                        Invoice::create([
-                            'reservation_id' => $this->record->id,
-                            'invoice_number' => Invoice::generateNumber(),
-                            'subtotal'       => $subtotal,
-                            'taxes'          => 0,
-                            'total'          => $subtotal,
-                            'status'         => 'pagada',
-                        ]);
-                        Payment::create([
-                            'reservation_id' => $this->record->id,
-                            'registered_by'  => Auth::id(),
-                            'amount'         => $data['amount'],
-                            'method'         => $data['method'],
-                            'paid_at'        => now(),
-                            'notes'          => $data['notes'] ?? null,
-                        ]);
-                    });
-                    Notification::make()
-                        ->title('Salida registrada — Factura generada')
-                        ->body('Hab. ' . $this->record->room->number . ' queda pendiente de limpieza')
-                        ->success()->send();
-                    $this->refreshFormData(['status']);
+                    try {
+                        $this->record->checkout(
+                            amount: (float) $data['amount'],
+                            method: $data['method'],
+                            notes:  $data['notes'] ?? null,
+                        );
+                        Notification::make()
+                            ->title('Salida registrada — Factura generada')
+                            ->body('Hab. ' . $this->record->room->number . ' queda pendiente de limpieza')
+                            ->success()
+                            ->send();
+                        $this->refreshFormData(['status']);
+                    } catch (\DomainException $e) {
+                        Notification::make()
+                            ->title($e->getMessage())
+                            ->danger()
+                            ->send();
+                    }
                 }),
 
-            //  CANCELAR — solo si pendiente o aprobada
+            // CANCELAR — solo si pendiente o aprobada
             Action::make('cancelar')
                 ->label('Cancelar reserva')
                 ->icon('heroicon-o-no-symbol')
@@ -187,18 +184,29 @@ class ViewReservation extends ViewRecord
                 ->modalHeading('Cancelar reserva')
                 ->visible(fn () => in_array($this->record->status, ['pendiente', 'aprobada']))
                 ->action(function () {
-                    $this->record->update(['status' => 'cancelada']);
-                    Notification::make()
-                        ->title('Reserva cancelada')
-                        ->danger()->send();
-                    $this->refreshFormData(['status']);
+                    try {
+                        $this->record->cancel();
+                        Notification::make()
+                            ->title('Reserva cancelada')
+                            ->danger()
+                            ->send();
+                        $this->refreshFormData(['status']);
+                    } catch (\DomainException $e) {
+                        Notification::make()
+                            ->title($e->getMessage())
+                            ->danger()
+                            ->send();
+                    }
                 }),
 
-            //  EDITAR — siempre visible excepto estados finales
+            // EDITAR — solo en estados no finales
             EditAction::make()
                 ->label('Editar datos')
                 ->icon('heroicon-o-pencil-square')
-                ->visible(fn () => ! in_array($this->record->status, ['checked_out', 'rechazada', 'cancelada'])),
+                ->visible(fn () => ! in_array(
+                    $this->record->status,
+                    ['checked_out', 'rechazada', 'cancelada']
+                )),
         ];
     }
 }

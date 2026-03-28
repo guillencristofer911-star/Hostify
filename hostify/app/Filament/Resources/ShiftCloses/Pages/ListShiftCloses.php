@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ShiftCloses\Pages;
 
+use App\Enums\ShiftCloseStatus;
 use App\Filament\Resources\ShiftCloses\ShiftCloseResource;
 use App\Models\ShiftClose;
 use Filament\Actions\CreateAction;
@@ -37,31 +38,34 @@ class ListShiftCloses extends ListRecords
 
             'abierto' => Tab::make('Abiertos')
                 ->icon('heroicon-o-play-circle')
-                ->badge(static fn () => ShiftClose::where('status', 'abierto')->count())
-                ->badgeColor('success')
+                //  Enum en badge count
+                ->badge(static fn () => ShiftClose::where('status', ShiftCloseStatus::Abierto)->count())
+                ->badgeColor(ShiftCloseStatus::Abierto->color())   //  color del Enum
                 ->deferBadge()
                 ->modifyQueryUsing(fn (Builder $query) =>
-                    $query->where('status', 'abierto')
+                    $query->where('status', ShiftCloseStatus::Abierto)  //  Enum
                           ->orderBy('shift_start', 'desc')
                 ),
 
             'cerrado' => Tab::make('Cerrados')
                 ->icon('heroicon-o-stop-circle')
-                ->badge(static fn () => ShiftClose::where('status', 'cerrado')->count())
-                ->badgeColor('warning')
+                //  Enum en badge count
+                ->badge(static fn () => ShiftClose::where('status', ShiftCloseStatus::Cerrado)->count())
+                ->badgeColor(ShiftCloseStatus::Cerrado->color())   //  color del Enum
                 ->deferBadge()
                 ->modifyQueryUsing(fn (Builder $query) =>
-                    $query->where('status', 'cerrado')
+                    $query->where('status', ShiftCloseStatus::Cerrado)  //  Enum
                           ->orderBy('shift_end', 'desc')
                 ),
 
             'validado' => Tab::make('Validados')
                 ->icon('heroicon-o-check-badge')
-                ->badge(static fn () => ShiftClose::where('status', 'validado')->count())
-                ->badgeColor('info')
+                //  Enum en badge count
+                ->badge(static fn () => ShiftClose::where('status', ShiftCloseStatus::Validado)->count())
+                ->badgeColor(ShiftCloseStatus::Validado->color())  
                 ->deferBadge()
                 ->modifyQueryUsing(fn (Builder $query) =>
-                    $query->where('status', 'validado')
+                    $query->where('status', ShiftCloseStatus::Validado)  
                           ->orderBy('validated_at', 'desc')
                 ),
         ];

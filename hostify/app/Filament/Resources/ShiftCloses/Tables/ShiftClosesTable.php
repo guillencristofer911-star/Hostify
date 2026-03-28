@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ShiftCloses\Tables;
 
+use App\Enums\ShiftCloseStatus;
 use App\Models\ShiftClose;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -12,7 +13,6 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
 
 class ShiftClosesTable
 {
@@ -48,7 +48,7 @@ class ShiftClosesTable
                     ->toggleable(),
 
                 TextColumn::make('total_card_system')
-                    ->label('Datáfono sistema')
+                    ->label('Datáfono / Transf. sistema')
                     ->money('COP')
                     ->icon('heroicon-o-credit-card')
                     ->toggleable(),
@@ -79,24 +79,9 @@ class ShiftClosesTable
                 TextColumn::make('status')
                     ->label('Estado')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'abierto'  => 'warning',
-                        'cerrado'  => 'info',
-                        'validado' => 'success',
-                        default    => 'gray',
-                    })
-                    ->icon(fn (string $state): string => match ($state) {
-                        'abierto'  => 'heroicon-o-lock-open',
-                        'cerrado'  => 'heroicon-o-lock-closed',
-                        'validado' => 'heroicon-o-check-badge',
-                        default    => 'heroicon-o-question-mark-circle',
-                    })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'abierto'  => 'Abierto',
-                        'cerrado'  => 'Cerrado',
-                        'validado' => 'Validado',
-                        default    => $state,
-                    })
+                    ->color(fn (ShiftCloseStatus $state): string => $state->color())
+                    ->icon(fn (ShiftCloseStatus $state): string => $state->icon())
+                    ->formatStateUsing(fn (ShiftCloseStatus $state): string => $state->label())
                     ->toggleable(),
 
                 TextColumn::make('validatedBy.name')
@@ -121,14 +106,11 @@ class ShiftClosesTable
             ->filters([
                 SelectFilter::make('status')
                     ->label('Estado')
-                    ->options([
-                        'abierto'  => 'Abierto',
-                        'cerrado'  => 'Cerrado',
-                        'validado' => 'Validado',
-                    ]),
+                    ->options(ShiftCloseStatus::options()),   // ← usa Enum
             ])
             ->recordActions([
-                // CERRAR TURNO
+
+                //  CERRAR TURNO 
                 Action::make('cerrar')
                     ->label('Cerrar turno')
                     ->icon('heroicon-o-lock-closed')
@@ -136,44 +118,42 @@ class ShiftClosesTable
                     ->requiresConfirmation()
                     ->modalHeading('Cerrar turno')
                     ->modalIcon('heroicon-o-lock-closed')
+                    ->modalSubmitActionLabel('Cerrar turno')
+                    ->modalCancelActionLabel('Cancelar')
                     ->form([
                         TextInput::make('total_cash_counted')
                             ->label('Efectivo contado en caja ($)')
                             ->numeric()
                             ->prefix('$')
+                            ->minValue(0)
                             ->required(),
                     ])
-                    ->visible(fn (ShiftClose $record): bool => $record->status === 'abierto')
+                    //  usa Enum en visible()
+                    ->visible(fn (ShiftClose $record): bool =>
+                        $record->status === ShiftCloseStatus::Abierto
+                    )
                     ->action(function (ShiftClose $record, array $data) {
-                        $record->calculateTotals();
+                        //  delega al método de negocio del modelo (sin duplicar lógica)
+                        $record->close(
+                            cashCounted:     (float) $data['total_cash_counted'],
+                            marginThreshold: (float) ($record->margin_threshold ?? 5000),
+                        );
+
                         $record->refresh();
-
-                        $counted    = (float) $data['total_cash_counted'];
-                        $system     = (float) $record->total_cash_system;
-                        $difference = $counted - $system;
-                        $margin     = (float) ($record->margin_threshold ?? 5000);
-
-                        $record->update([
-                            'closed_by'          => Auth::id(),
-                            'shift_end'          => now(),
-                            'total_cash_counted' => $counted,
-                            'difference'         => $difference,
-                            'within_margin'      => abs($difference) <= $margin,
-                            'status'             => 'cerrado',
-                        ]);
+                        $difference = abs((float) $record->difference);
 
                         Notification::make()
                             ->title('Turno cerrado')
                             ->body(
-                                abs($difference) <= $margin
-                                    ? '✅ Diferencia dentro del margen: $' . number_format(abs($difference), 0, ',', '.')
-                                    : '⚠️ Diferencia fuera del margen: $' . number_format(abs($difference), 0, ',', '.')
+                                $record->within_margin
+                                    ? '✅ Diferencia dentro del margen: $' . number_format($difference, 0, ',', '.')
+                                    : '⚠️ Diferencia fuera del margen: $' . number_format($difference, 0, ',', '.')
                             )
-                            ->color(abs($difference) <= $margin ? 'success' : 'warning')
+                            ->color($record->within_margin ? 'success' : 'warning')
                             ->send();
                     }),
 
-                // VALIDAR TURNO
+                //  VALIDAR TURNO 
                 Action::make('validar')
                     ->label('Validar')
                     ->icon('heroicon-o-check-badge')
@@ -182,13 +162,15 @@ class ShiftClosesTable
                     ->modalHeading('Validar cierre de turno')
                     ->modalIcon('heroicon-o-check-badge')
                     ->modalDescription('Confirmas que los valores están correctos y el turno queda validado.')
-                    ->visible(fn (ShiftClose $record): bool => $record->status === 'cerrado')
+                    ->modalSubmitActionLabel('Validar turno')
+                    ->modalCancelActionLabel('Cancelar')
+                    // ← usa Enum en visible()
+                    ->visible(fn (ShiftClose $record): bool =>
+                        $record->status === ShiftCloseStatus::Cerrado
+                    )
                     ->action(function (ShiftClose $record) {
-                        $record->update([
-                            'validated_by' => Auth::id(),
-                            'validated_at' => now(),
-                            'status'       => 'validado',
-                        ]);
+                        // ← delega al método de negocio del modelo
+                        $record->validate();
 
                         Notification::make()
                             ->title('Turno validado')

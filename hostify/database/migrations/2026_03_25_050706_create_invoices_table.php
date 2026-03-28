@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('invoices', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('reservation_id')->constrained()->onDelete('cascade');
-            $table->string('invoice_number', 20)->unique();
+            $table->string('invoice_number', 30)->unique(); // ampliado de 20 a 30 como respaldo
             $table->decimal('subtotal', 10, 2)->default(0);
             $table->decimal('taxes', 10, 2)->default(0);
             $table->decimal('total', 10, 2);

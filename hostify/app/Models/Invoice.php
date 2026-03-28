@@ -42,8 +42,13 @@ class Invoice extends Model
 
     //  Helpers 
 
+    /**
+     * Genera un n\u00famero de factura \u00fanico.
+     * Formato: FAC-YYYYMMDD-XXXX  (m\u00e1x 17 caracteres, cabe en varchar(20))
+     * Ejemplo: FAC-20260328-A3K9
+     */
     public static function generateNumber(): string
     {
-        return 'F-' . now()->format('YmdHisv') . '-' . Str::upper(Str::random(4));
+        return 'FAC-' . now()->format('Ymd') . '-' . Str::upper(Str::random(4));
     }
 }

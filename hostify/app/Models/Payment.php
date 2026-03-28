@@ -47,12 +47,35 @@ class Payment extends Model
 
     //  Scopes 
 
+    /** Pagos en efectivo */
     public function scopeCash($query)
     {
         return $query->where('method', PaymentMethod::Efectivo);
     }
 
+    /**
+     * Pagos no-efectivo: datáfono + transferencia.
+     * Se agrupan en total_card_system porque la tabla shift_closes
+     * no tiene columna separada para transferencias.
+     */
     public function scopeCard($query)
+    {
+        return $query->whereIn('method', [
+            PaymentMethod::Datafono,
+            PaymentMethod::Transferencia,
+        ]);
+    }
+
+    /** Alias semántico de scopeCard() */
+    public function scopeNonCash($query)
+    {
+        return $query->whereIn('method', [
+            PaymentMethod::Datafono,
+            PaymentMethod::Transferencia,
+        ]);
+    }
+
+    public function scopeDatasphone($query)
     {
         return $query->where('method', PaymentMethod::Datafono);
     }

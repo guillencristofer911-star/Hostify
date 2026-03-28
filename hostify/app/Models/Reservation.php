@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\InvoiceStatus;
+use App\Enums\ReservationSource;
 use App\Enums\ReservationStatus;
 use App\Enums\RoomStatus;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class Reservation extends Model
@@ -40,6 +42,7 @@ class Reservation extends Model
         'actual_check_out' => 'datetime',
         'rate'             => 'decimal:2',
         'status'           => ReservationStatus::class,
+        'source'           => ReservationSource::class, 
     ];
 
     //  Relaciones 
@@ -159,13 +162,19 @@ class Reservation extends Model
     }
 
     /**
-     * @param float  $amount  Monto recibido
-     * @param string $method  Valor de PaymentMethod (efectivo|datafono|transferencia)
-     * @param string|null $notes  Observaciones opcionales
+     * Registra la salida, genera factura y registra el pago.
+     *
+     * @param  float       $amount  Monto recibido
+     * @param  string      $method  Valor de PaymentMethod (efectivo|datafono|transferencia)
+     * @param  string|null $notes   Observaciones opcionales
+     *
+     * @throws \DomainException Si la reserva no cumple las condiciones para checkout
      */
     public function checkout(float $amount, string $method, ?string $notes = null): void
     {
         $this->loadMissing(['room', 'charges', 'invoice']);
+
+        //  Guards ────────────────────────────────────────────────────────────
 
         if ($this->status !== ReservationStatus::Activa) {
             throw new \DomainException('Solo se puede registrar salida en reservas activas.');
@@ -179,32 +188,65 @@ class Reservation extends Model
             throw new \DomainException('La reserva ya tiene una factura generada.');
         }
 
-        $subtotal     = $this->invoice_total;
+        // validar que hay un turno abierto antes de proceder
         $shiftCloseId = ShiftClose::openForUser((string) Auth::id());
 
-        $this->update([
-            'status'           => ReservationStatus::CheckedOut,
-            'actual_check_out' => now(),
-        ]);
+        if (! $shiftCloseId) {
+            throw new \DomainException('No hay un turno abierto. Abre un turno antes de registrar la salida.');
+        }
 
-        $this->room->updateStatus(RoomStatus::Sucia);
+        // ← NUEVO: validar monto positivo
+        if ($amount <= 0) {
+            throw new \DomainException('El monto del pago debe ser mayor a cero.');
+        }
 
-        $this->invoice()->create([
-            'invoice_number' => Invoice::generateNumber(),
-            'subtotal'       => $subtotal,
-            'taxes'          => 0,
-            'total'          => $subtotal,
-            'status'         => InvoiceStatus::Pagada,
-        ]);
+        //  Ejecución transaccional 
+        // Si cualquier paso falla (factura, pago), todo hace rollback
+        // y la habitación / reserva no quedan en estado inconsistente.
 
-        $this->payments()->create([
-            'registered_by'  => Auth::id(),
-            'shift_close_id' => $shiftCloseId,
-            'amount'         => $amount,
-            'method'         => $method,
-            'paid_at'        => now(),
-            'notes'          => $notes,
-        ]);
+        DB::transaction(function () use ($amount, $method, $notes, $shiftCloseId) {
+
+            $subtotal = $this->invoice_total;
+
+            // 1. Actualizar estado de reserva
+            $this->update([
+                'status'           => ReservationStatus::CheckedOut,
+                'actual_check_out' => now(),
+            ]);
+
+            // 2. Marcar habitación como sucia
+            $this->room->updateStatus(RoomStatus::Sucia);
+
+            // 3. Crear factura — try/catch por si hay colisión en invoice_number
+            try {
+                $this->invoice()->create([
+                    'invoice_number' => Invoice::generateNumber(),
+                    'subtotal'       => $subtotal,
+                    'taxes'          => 0,
+                    'total'          => $subtotal,
+                    'status'         => InvoiceStatus::Pagada,
+                ]);
+            } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+                // Reintento con nuevo número si hubo colisión de milisegundo
+                $this->invoice()->create([
+                    'invoice_number' => Invoice::generateNumber(),
+                    'subtotal'       => $subtotal,
+                    'taxes'          => 0,
+                    'total'          => $subtotal,
+                    'status'         => InvoiceStatus::Pagada,
+                ]);
+            }
+
+            // 4. Registrar pago
+            $this->payments()->create([
+                'registered_by'  => Auth::id(),
+                'shift_close_id' => $shiftCloseId,
+                'amount'         => $amount,
+                'method'         => $method,
+                'paid_at'        => now(),
+                'notes'          => $notes,
+            ]);
+        });
     }
 
     public function generateToken(): void

@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('room_inventory', function (Blueprint $table) {
@@ -16,6 +13,7 @@ return new class extends Migration
             $table->foreignUuid('room_id')->constrained()->onDelete('cascade');
             $table->foreignUuid('item_id')->constrained('inventory_items')->onDelete('cascade');
             $table->smallInteger('current_quantity')->default(0);
+            $table->softDeletes();
             $table->timestamps();
 
             $table->unique(['room_id', 'item_id']);
@@ -23,9 +21,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('room_inventory');

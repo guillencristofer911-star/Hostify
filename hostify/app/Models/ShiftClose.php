@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ShiftCloseStatus;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 
 class ShiftClose extends Model
 {
-    use HasUuids, SoftDeletes;
+    use HasUuids, SoftDeletes, HasFactory;
 
     protected $fillable = [
         'opened_by', 'closed_by', 'validated_by',

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ShiftCloses\Tables;
 
 use App\Enums\ShiftCloseStatus;
+use App\Filament\Resources\ShiftCloses\ShiftCloseResource;
 use App\Models\ShiftClose;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -106,7 +107,7 @@ class ShiftClosesTable
             ->filters([
                 SelectFilter::make('status')
                     ->label('Estado')
-                    ->options(ShiftCloseStatus::options()),   // ← usa Enum
+                    ->options(ShiftCloseStatus::options()),
             ])
             ->recordActions([
 
@@ -128,12 +129,10 @@ class ShiftClosesTable
                             ->minValue(0)
                             ->required(),
                     ])
-                    //  usa Enum en visible()
                     ->visible(fn (ShiftClose $record): bool =>
                         $record->status === ShiftCloseStatus::Abierto
                     )
                     ->action(function (ShiftClose $record, array $data) {
-                        //  delega al método de negocio del modelo (sin duplicar lógica)
                         $record->close(
                             cashCounted:     (float) $data['total_cash_counted'],
                             marginThreshold: (float) ($record->margin_threshold ?? 5000),
@@ -164,12 +163,10 @@ class ShiftClosesTable
                     ->modalDescription('Confirmas que los valores están correctos y el turno queda validado.')
                     ->modalSubmitActionLabel('Validar turno')
                     ->modalCancelActionLabel('Cancelar')
-                    // ← usa Enum en visible()
                     ->visible(fn (ShiftClose $record): bool =>
                         $record->status === ShiftCloseStatus::Cerrado
                     )
                     ->action(function (ShiftClose $record) {
-                        // ← delega al método de negocio del modelo
                         $record->validate();
 
                         Notification::make()
@@ -179,21 +176,19 @@ class ShiftClosesTable
                             ->send();
                     }),
 
+                //  VER DETALLE 
                 Action::make('ver')
                     ->label('Ver detalle')
                     ->icon('heroicon-o-eye')
                     ->color('info')
-                    ->url(fn (ShiftClose $record) => static::getUrl('view', ['record' => $record])),
+                    ->url(fn (ShiftClose $record) =>
+                        ShiftCloseResource::getUrl('view', ['record' => $record])
+                    ),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()->label('Eliminar seleccionados'),
                 ]),
             ]);
-    }
-
-    private static function getUrl(string $name, array $parameters = []): string
-    {
-        return \App\Filament\Resources\ShiftCloses\ShiftCloseResource::getUrl($name, $parameters);
     }
 }

@@ -21,18 +21,23 @@ class ReservationForm
             // HUÉSPED
             Select::make('guest_id')
                 ->label('Huésped')
-                ->options(
-                    Guest::active()
+                ->searchable()
+                ->getSearchResultsUsing(function (string $search) {
+                    return Guest::active()
+                        ->where(function ($q) use ($search) {
+                            $q->where('full_name', 'ilike', "%{$search}%")
+                              ->orWhere('document_number', 'ilike', "%{$search}%");
+                        })
+                        ->limit(20)
                         ->get()
                         ->mapWithKeys(fn ($g) => [
                             $g->id => $g->full_name . ' — ' . $g->document_number
-                        ])
-                )
+                        ]);
+                })
                 ->getOptionLabelUsing(function ($value) {
                     $g = Guest::find($value);
                     return $g ? $g->full_name . ' — ' . $g->document_number : $value;
                 })
-                ->searchable()
                 ->required()
                 ->createOptionForm([
                     TextInput::make('full_name')
@@ -80,15 +85,24 @@ class ReservationForm
                     $set('room_id', null);
                 }),
 
-            // HABITACIÓN — corregido con getOptionLabelUsing
+            // HABITACIÓN
             Select::make('room_id')
                 ->label('Habitación')
                 ->required()
-                ->options(function (Get $get) {
+                ->searchable()
+                ->getSearchResultsUsing(function (string $search, Get $get) {
                     $checkIn  = $get('check_in_date');
                     $checkOut = $get('check_out_date');
 
-                    $query = Room::active()->with('roomType');
+                    $query = Room::active()
+                        ->with('roomType')
+                        ->where(function ($q) use ($search) {
+                            $q->where('number', 'ilike', "%{$search}%")
+                              ->orWhereHas('roomType', fn ($q2) =>
+                                  $q2->where('name', 'ilike', "%{$search}%")
+                              )
+                              ->orWhere('floor', 'ilike', "%{$search}%");
+                        });
 
                     if ($checkIn && $checkOut) {
                         $ocupadas = Reservation::whereIn('status', ['aprobada', 'activa'])
@@ -102,21 +116,27 @@ class ReservationForm
                         $query->where('status', 'libre');
                     }
 
-                    return $query->get()->mapWithKeys(function ($r) {
-                        $label = 'Hab. ' . $r->number
-                            . ' — ' . $r->roomType->name
-                            . ' ($' . number_format($r->roomType->base_price, 0, ',', '.') . ')';
-                        return [$r->id => $label];
-                    });
+                    return $query
+                        ->orderBy('floor')
+                        ->orderBy('number')
+                        ->limit(30)
+                        ->get()
+                        ->mapWithKeys(function ($r) {
+                            $label = 'Piso ' . $r->floor
+                                . ' · Hab. ' . $r->number
+                                . ' — ' . $r->roomType->name
+                                . ' ($' . number_format($r->roomType->base_price, 0, ',', '.') . ')';
+                            return [$r->id => $label];
+                        });
                 })
                 ->getOptionLabelUsing(function ($value) {
                     $room = Room::with('roomType')->find($value);
                     if (! $room) return $value;
-                    return 'Hab. ' . $room->number
+                    return 'Piso ' . $room->floor
+                        . ' · Hab. ' . $room->number
                         . ' — ' . $room->roomType->name
                         . ' ($' . number_format($room->roomType->base_price, 0, ',', '.') . ')';
                 })
-                ->searchable()
                 ->live()
                 ->afterStateUpdated(function ($state, Set $set) {
                     if ($state) {

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Enums\RoomStatus;
 use App\Models\Reservation;
 use App\Models\Room;
 use BackedEnum;
@@ -43,26 +44,17 @@ class RoomsPanel extends Page
 
     public function changeStatus(string $roomId, string $status): void
     {
-        $allowed = ['libre', 'ocupada', 'sucia', 'no_disponible'];
-
-        if (! in_array($status, $allowed)) {
+        if (! RoomStatus::tryFrom($status)) {
             return;
         }
 
         $room = Room::findOrFail($roomId);
-        $room->updateStatus($status);
+        $room->updateStatus(RoomStatus::from($status));
 
         unset($this->openMenus[$roomId]);
 
-        $labels = [
-            'libre'         => 'Libre',
-            'ocupada'       => 'Ocupada',
-            'sucia'         => 'Sucia',
-            'no_disponible' => 'No disponible',
-        ];
-
         Notification::make()
-            ->title("Hab. {$room->number} — {$labels[$status]}")
+            ->title("Hab. {$room->number} — " . RoomStatus::from($status)->label())
             ->success()
             ->send();
     }
@@ -84,9 +76,9 @@ class RoomsPanel extends Page
             ->get()
             ->each(function ($room) use ($occupiedIds) {
                 if (in_array($room->id, $occupiedIds)) {
-                    $room->status = 'ocupada';
-                } elseif ($room->status === 'ocupada') {
-                    $room->status = 'libre';
+                    $room->status = RoomStatus::Ocupada;
+                } elseif ($room->status === RoomStatus::Ocupada) {
+                    $room->status = RoomStatus::Libre;
                 }
             })
             ->groupBy('floor');
@@ -98,30 +90,26 @@ class RoomsPanel extends Page
         $occupiedIds = $this->occupiedIds($date);
         $allRooms    = Room::active()->with('roomType')->get();
 
-        $libre         = 0;
-        $ocupada       = 0;
-        $sucia         = 0;
-        $no_disponible = 0;
+        $counts = array_fill_keys(
+            array_column(RoomStatus::cases(), 'value'),
+            0
+        );
 
         foreach ($allRooms as $room) {
             if (in_array($room->id, $occupiedIds)) {
-                $ocupada++;
-            } elseif ($room->status === 'sucia') {
-                $sucia++;
-            } elseif ($room->status === 'no_disponible') {
-                $no_disponible++;
+                $counts[RoomStatus::Ocupada->value]++;
             } else {
-                $libre++;
+                $counts[$room->status->value]++;
             }
         }
 
         return [
             'pisos'   => $this->getRooms(),
             'resumen' => [
-                'libre'         => $libre,
-                'ocupada'       => $ocupada,
-                'sucia'         => $sucia,
-                'no_disponible' => $no_disponible,
+                'libre'         => $counts[RoomStatus::Libre->value],
+                'ocupada'       => $counts[RoomStatus::Ocupada->value],
+                'sucia'         => $counts[RoomStatus::Sucia->value],
+                'no_disponible' => $counts[RoomStatus::NoDisponible->value],
                 'total'         => $allRooms->count(),
             ],
         ];

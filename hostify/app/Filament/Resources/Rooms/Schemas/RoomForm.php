@@ -2,12 +2,13 @@
 
 namespace App\Filament\Resources\Rooms\Schemas;
 
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Textarea;
-use Filament\Schemas\Schema;
+use App\Enums\RoomStatus;
 use App\Models\RoomType;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Schema;
 
 class RoomForm
 {
@@ -37,13 +38,8 @@ class RoomForm
 
             Select::make('status')
                 ->label('Estado')
-                ->options([
-                    'libre'         => 'Libre',
-                    'sucia'         => 'Sucia',
-                    'ocupada'       => 'Ocupada',
-                    'no_disponible' => 'No disponible',
-                ])
-                ->default('libre')
+                ->options(RoomStatus::options())
+                ->default(RoomStatus::Libre->value)
                 ->required()
                 ->native(false),
 

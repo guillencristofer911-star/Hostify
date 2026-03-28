@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Reservations\Tables;
 
+use App\Enums\ReservationStatus;
 use App\Filament\Resources\Reservations\ReservationResource;
 use App\Models\Reservation;
 use Filament\Actions\Action;
@@ -62,33 +63,9 @@ class ReservationsTable
                 TextColumn::make('status')
                     ->label('Estado')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'pendiente'   => 'warning',
-                        'aprobada'    => 'info',
-                        'activa'      => 'success',
-                        'checked_out' => 'gray',
-                        'rechazada'   => 'danger',
-                        'cancelada'   => 'danger',
-                        default       => 'gray',
-                    })
-                    ->icon(fn (string $state): string => match ($state) {
-                        'pendiente'   => 'heroicon-o-clock',
-                        'aprobada'    => 'heroicon-o-check-circle',
-                        'activa'      => 'heroicon-o-home',
-                        'checked_out' => 'heroicon-o-arrow-left-on-rectangle',
-                        'rechazada'   => 'heroicon-o-x-circle',
-                        'cancelada'   => 'heroicon-o-no-symbol',
-                        default       => 'heroicon-o-question-mark-circle',
-                    })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'pendiente'   => 'Pendiente',
-                        'aprobada'    => 'Aprobada',
-                        'activa'      => 'Activa',
-                        'checked_out' => 'Check-out',
-                        'rechazada'   => 'Rechazada',
-                        'cancelada'   => 'Cancelada',
-                        default       => $state,
-                    })
+                    ->color(fn (ReservationStatus $state): string => $state->color())
+                    ->icon(fn (ReservationStatus $state): string => $state->icon())
+                    ->formatStateUsing(fn (ReservationStatus $state): string => $state->label())
                     ->toggleable(),
 
                 TextColumn::make('rate')
@@ -131,14 +108,7 @@ class ReservationsTable
             ->filters([
                 SelectFilter::make('status')
                     ->label('Estado')
-                    ->options([
-                        'pendiente'   => 'Pendiente',
-                        'aprobada'    => 'Aprobada',
-                        'activa'      => 'Activa',
-                        'checked_out' => 'Check-out',
-                        'rechazada'   => 'Rechazada',
-                        'cancelada'   => 'Cancelada',
-                    ]),
+                    ->options(ReservationStatus::options()),
 
                 SelectFilter::make('source')
                     ->label('Origen')
@@ -160,7 +130,7 @@ class ReservationsTable
                     ->modalHeading('Aprobar reserva')
                     ->modalIcon('heroicon-o-check-circle')
                     ->modalDescription('La reserva quedará confirmada y lista para registrar entrada.')
-                    ->visible(fn (Reservation $record): bool => $record->status === 'pendiente')
+                    ->visible(fn (Reservation $record): bool => $record->status === ReservationStatus::Pendiente)
                     ->action(function (Reservation $record) {
                         $record->approve();
 
@@ -184,7 +154,7 @@ class ReservationsTable
                             ->required()
                             ->rows(3),
                     ])
-                    ->visible(fn (Reservation $record): bool => $record->status === 'pendiente')
+                    ->visible(fn (Reservation $record): bool => $record->status === ReservationStatus::Pendiente)
                     ->action(function (Reservation $record, array $data) {
                         $record->reject($data['rejection_reason']);
 
@@ -205,7 +175,7 @@ class ReservationsTable
                     ->modalDescription(fn (Reservation $record) =>
                         "Huésped: {$record->guest->full_name} — Hab. " . ($record->room?->number ?? 'Sin asignar')
                     )
-                    ->visible(fn (Reservation $record): bool => $record->status === 'aprobada')
+                    ->visible(fn (Reservation $record): bool => $record->status === ReservationStatus::Aprobada)
                     ->action(function (Reservation $record) {
                         try {
                             $record->checkin();
@@ -274,7 +244,7 @@ class ReservationsTable
                                 ->placeholder('Opcional'),
                         ];
                     })
-                    ->visible(fn (Reservation $record): bool => $record->status === 'activa')
+                    ->visible(fn (Reservation $record): bool => $record->status === ReservationStatus::Activa)
                     ->action(function (Reservation $record, array $data) {
                         try {
                             $record->checkout(
@@ -306,7 +276,7 @@ class ReservationsTable
                     ->modalHeading('Cancelar reserva')
                     ->modalIcon('heroicon-o-no-symbol')
                     ->visible(fn (Reservation $record): bool =>
-                        in_array($record->status, ['pendiente', 'aprobada'])
+                        in_array($record->status, [ReservationStatus::Pendiente, ReservationStatus::Aprobada])
                     )
                     ->action(function (Reservation $record) {
                         $record->cancel();

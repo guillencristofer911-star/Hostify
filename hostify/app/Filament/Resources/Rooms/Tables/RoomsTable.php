@@ -2,12 +2,13 @@
 
 namespace App\Filament\Resources\Rooms\Tables;
 
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
+use App\Enums\RoomStatus;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
@@ -39,27 +40,9 @@ class RoomsTable
                 TextColumn::make('status')
                     ->label('Estado')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'libre'         => 'success',
-                        'sucia'         => 'warning',
-                        'ocupada'       => 'danger',
-                        'no_disponible' => 'gray',
-                        default         => 'gray',
-                    })
-                    ->icon(fn (string $state): string => match ($state) {
-                        'libre'         => 'heroicon-o-check-circle',
-                        'sucia'         => 'heroicon-o-sparkles',
-                        'ocupada'       => 'heroicon-o-lock-closed',
-                        'no_disponible' => 'heroicon-o-no-symbol',
-                        default         => 'heroicon-o-question-mark-circle',
-                    })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'libre'         => 'Libre',
-                        'sucia'         => 'Sucia',
-                        'ocupada'       => 'Ocupada',
-                        'no_disponible' => 'No disponible',
-                        default         => $state,
-                    }),
+                    ->color(fn (RoomStatus $state): string => $state->color())
+                    ->icon(fn (RoomStatus $state): string => $state->icon())
+                    ->formatStateUsing(fn (RoomStatus $state): string => $state->label()),
 
                 TextColumn::make('roomType.base_price')
                     ->label('Precio/noche')
@@ -74,12 +57,7 @@ class RoomsTable
             ->filters([
                 SelectFilter::make('status')
                     ->label('Estado')
-                    ->options([
-                        'libre'         => 'Libre',
-                        'sucia'         => 'Sucia',
-                        'ocupada'       => 'Ocupada',
-                        'no_disponible' => 'No disponible',
-                    ]),
+                    ->options(RoomStatus::options()),
 
                 SelectFilter::make('room_type_id')
                     ->label('Tipo')
@@ -87,12 +65,7 @@ class RoomsTable
 
                 SelectFilter::make('floor')
                     ->label('Piso')
-                    ->options([
-                        1 => 'Piso 1',
-                        2 => 'Piso 2',
-                        3 => 'Piso 3',
-                        4 => 'Piso 4',
-                    ]),
+                    ->relationship('floor', 'floor'),
 
                 TernaryFilter::make('is_active')
                     ->label('Activa'),

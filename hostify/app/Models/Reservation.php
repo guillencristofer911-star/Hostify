@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ReservationStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -36,7 +37,10 @@ class Reservation extends Model
         'actual_check_in'  => 'datetime',
         'actual_check_out' => 'datetime',
         'rate'             => 'decimal:2',
+        'status'           => ReservationStatus::class,
     ];
+
+    //  Relaciones 
 
     public function guest(): BelongsTo
     {
@@ -78,6 +82,8 @@ class Reservation extends Model
         return $this->hasMany(Incident::class);
     }
 
+    //  Accessors 
+
     public function getNightsAttribute(): int
     {
         return max(1, (int) $this->check_in_date->diffInDays($this->check_out_date));
@@ -98,45 +104,43 @@ class Reservation extends Model
         return $this->room_total + $this->total_charges;
     }
 
+    //  Acciones de negocio 
+
     public function approve(): void
     {
-        if ($this->status !== 'pendiente') {
+        if ($this->status !== ReservationStatus::Pendiente) {
             throw new \DomainException('Solo se pueden aprobar reservas pendientes.');
         }
 
-        $this->update([
-            'status' => 'aprobada',
-        ]);
+        $this->update(['status' => ReservationStatus::Aprobada]);
     }
 
     public function reject(string $reason): void
     {
-        if ($this->status !== 'pendiente') {
+        if ($this->status !== ReservationStatus::Pendiente) {
             throw new \DomainException('Solo se pueden rechazar reservas pendientes.');
         }
 
         $this->update([
-            'status'           => 'rechazada',
+            'status'           => ReservationStatus::Rechazada,
             'rejection_reason' => $reason,
         ]);
     }
 
     public function cancel(): void
     {
-        if (! in_array($this->status, ['pendiente', 'aprobada'])) {
+        if (! in_array($this->status, [ReservationStatus::Pendiente, ReservationStatus::Aprobada])) {
             throw new \DomainException('Solo se pueden cancelar reservas pendientes o aprobadas.');
         }
 
-        $this->update([
-            'status' => 'cancelada',
-        ]);
+        $this->update(['status' => ReservationStatus::Cancelada]);
     }
 
     public function checkin(): void
     {
         $this->loadMissing(['room', 'guest']);
 
-        if ($this->status !== 'aprobada') {
+        if ($this->status !== ReservationStatus::Aprobada) {
             throw new \DomainException('Solo se puede registrar entrada en reservas aprobadas.');
         }
 
@@ -145,7 +149,7 @@ class Reservation extends Model
         }
 
         $this->update([
-            'status'          => 'activa',
+            'status'          => ReservationStatus::Activa,
             'actual_check_in' => now(),
         ]);
 
@@ -156,7 +160,7 @@ class Reservation extends Model
     {
         $this->loadMissing(['room', 'charges', 'invoice']);
 
-        if ($this->status !== 'activa') {
+        if ($this->status !== ReservationStatus::Activa) {
             throw new \DomainException('Solo se puede registrar salida en reservas activas.');
         }
 
@@ -171,7 +175,7 @@ class Reservation extends Model
         $subtotal = $this->invoice_total;
 
         $this->update([
-            'status'           => 'checked_out',
+            'status'           => ReservationStatus::CheckedOut,
             'actual_check_out' => now(),
         ]);
 
@@ -196,18 +200,18 @@ class Reservation extends Model
 
     public function generateToken(): void
     {
-        $this->update([
-            'pre_register_token' => Str::random(64),
-        ]);
+        $this->update(['pre_register_token' => Str::random(64)]);
     }
+
+    //  Scopes 
 
     public function scopePending($query)
     {
-        return $query->where('status', 'pendiente');
+        return $query->where('status', ReservationStatus::Pendiente);
     }
 
     public function scopeActive($query)
     {
-        return $query->where('status', 'activa');
+        return $query->where('status', ReservationStatus::Activa);
     }
 }

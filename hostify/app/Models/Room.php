@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\RoomStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -14,16 +15,18 @@ class Room extends Model
 
     protected $fillable = [
         'room_type_id', 'number', 'floor',
-        'status', 'is_active', 'status_changed_at', 'notes'
+        'status', 'is_active', 'status_changed_at', 'notes',
     ];
 
     protected $casts = [
         'is_active'         => 'boolean',
         'status_changed_at' => 'datetime',
         'floor'             => 'integer',
+        'status'            => RoomStatus::class,
     ];
 
-    // Relaciones 
+    //  Relaciones 
+
     public function roomType(): BelongsTo
     {
         return $this->belongsTo(RoomType::class);
@@ -54,7 +57,8 @@ class Room extends Model
         return $this->hasMany(Incident::class);
     }
 
-    // Scopes
+    //  Scopes 
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
@@ -62,20 +66,22 @@ class Room extends Model
 
     public function scopeAvailable($query)
     {
-        return $query->where('is_active', true)->where('status', 'libre');
+        return $query->where('is_active', true)
+                     ->where('status', RoomStatus::Libre);
     }
 
-    //  Helpers
-    public function updateStatus(string $status): void
+    //  Helpers 
+
+    public function updateStatus(string|RoomStatus $status): void
     {
         $this->update([
-            'status'            => $status,
+            'status'            => $status instanceof RoomStatus ? $status : RoomStatus::from($status),
             'status_changed_at' => now(),
         ]);
     }
 
     public function isAvailable(): bool
     {
-        return $this->status === 'libre' && $this->is_active;
+        return $this->status === RoomStatus::Libre && $this->is_active;
     }
 }

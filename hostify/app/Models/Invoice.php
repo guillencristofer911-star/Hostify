@@ -5,11 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class Invoice extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $fillable = [
         'reservation_id',
@@ -29,10 +30,14 @@ class Invoice extends Model
         'sent_at'  => 'datetime',
     ];
 
+    //  Relaciones 
+
     public function reservation(): BelongsTo
     {
         return $this->belongsTo(Reservation::class);
     }
+
+    //  Helpers 
 
     public static function generateNumber(): string
     {

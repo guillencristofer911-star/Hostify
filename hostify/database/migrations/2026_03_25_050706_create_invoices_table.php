@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('invoices', function (Blueprint $table) {
@@ -21,6 +18,7 @@ return new class extends Migration
             $table->enum('status', ['borrador', 'emitida', 'pagada', 'anulada'])->default('borrador');
             $table->timestamp('sent_at')->nullable();
             $table->string('sent_to_email', 150)->nullable();
+            $table->softDeletes();
             $table->timestamps();
 
             $table->unique('reservation_id');
@@ -28,9 +26,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('invoices');

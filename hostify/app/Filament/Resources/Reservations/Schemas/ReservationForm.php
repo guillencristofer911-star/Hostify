@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Reservations\Schemas;
 
+use App\Enums\ReservationStatus;
 use App\Models\Guest;
 use App\Models\Room;
 use App\Models\Reservation;
@@ -30,13 +31,11 @@ class ReservationForm
                         })
                         ->limit(20)
                         ->get()
-                        ->mapWithKeys(fn ($g) => [
-                            $g->id => $g->full_name . ' — ' . $g->document_number
-                        ]);
+                        ->mapWithKeys(fn ($g) => [$g->id => $g->full_label]);
                 })
                 ->getOptionLabelUsing(function ($value) {
                     $g = Guest::find($value);
-                    return $g ? $g->full_name . ' — ' . $g->document_number : $value;
+                    return $g?->full_label ?? $value;
                 })
                 ->required()
                 ->createOptionForm([
@@ -105,7 +104,10 @@ class ReservationForm
                         });
 
                     if ($checkIn && $checkOut) {
-                        $ocupadas = Reservation::whereIn('status', ['aprobada', 'activa'])
+                        $ocupadas = Reservation::whereIn('status', [
+                                ReservationStatus::Aprobada->value,
+                                ReservationStatus::Activa->value,
+                            ])
                             ->where('check_in_date', '<', $checkOut)
                             ->where('check_out_date', '>', $checkIn)
                             ->pluck('room_id')

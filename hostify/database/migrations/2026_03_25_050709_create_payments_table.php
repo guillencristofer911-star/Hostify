@@ -14,9 +14,10 @@ return new class extends Migration
             $table->foreignId('registered_by')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignUuid('shift_close_id')->nullable()->constrained('shift_closes')->onDelete('set null');
             $table->decimal('amount', 10, 2);
-            $table->enum('method', ['efectivo', 'datafono']);
+            $table->enum('method', ['efectivo', 'datafono', 'transferencia']);
             $table->timestamp('paid_at');
             $table->text('notes')->nullable();
+            $table->softDeletes();
             $table->timestamps();
 
             $table->index(['reservation_id', 'paid_at']);

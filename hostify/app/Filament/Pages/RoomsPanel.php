@@ -61,9 +61,8 @@ class RoomsPanel extends Page
         $user = Auth::user();
         if (! $user) return false;
 
-        return $user->hasAnyRole(['owner', 'supervisor', 'receptionist', 'housekeeper']);
+        return $user->hasAnyRole(['Super Admin', 'supervisor', 'recepcionista', 'camarera']);
     }
-
     //  Acciones de estado 
 
     public function toggleMenu(string $roomId): void

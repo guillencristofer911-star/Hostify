@@ -30,7 +30,7 @@ class CleaningSessionResource extends Resource
     protected static ?string $recordTitleAttribute = 'id';
     protected static ?int    $navigationSort       = 3;
 
-    //  Helpers de autenticación 
+    //  Helper autenticación 
 
     private static function authUser(): ?User
     {
@@ -39,27 +39,35 @@ class CleaningSessionResource extends Resource
         return $user;
     }
 
-    private static function hasAccess(string $permission): bool
+    //  Roles con acceso al módulo 
+
+    private static function canAccessModule(): bool
     {
-        try {
-            return static::authUser()?->hasPermissionTo($permission) ?? false;
-        } catch (\Exception) {
-            return false;
-        }
+        $user = static::authUser();
+        if (! $user) return false;
+
+        return $user->hasAnyRole(['owner', 'Super Admin', 'supervisor', 'receptionist', 'housekeeper']);
     }
 
-    //  Permisos 
+    private static function canManage(): bool
+    {
+        $user = static::authUser();
+        if (! $user) return false;
 
-    public static function canViewAny(): bool       { return static::hasAccess('view_any_cleaning_session'); }
-    public static function canCreate(): bool        { return static::hasAccess('create_cleaning_session'); }
-    public static function canEdit($record): bool   { return static::hasAccess('edit_cleaning_session'); }
-    public static function canDelete($record): bool { return static::hasAccess('delete_cleaning_session'); }
+        return $user->hasAnyRole(['owner', 'Super Admin', 'supervisor']);
+    }
 
-    //  Badge de navegación (RF-17) 
+    //  Permisos por acción 
+
+    public static function canViewAny(): bool       { return static::canAccessModule(); }
+    public static function canCreate(): bool        { return static::canManage(); }
+    public static function canEdit($record): bool   { return static::canManage(); }
+    public static function canDelete($record): bool { return static::canManage(); }
+
+    //  Badge de navegación ( 
 
     public static function getNavigationBadge(): ?string
     {
-        /** @var User|null $user */
         $user = static::authUser();
         if (! $user) return null;
 

@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -17,16 +18,16 @@ return new class extends Migration
             $table->foreignId('assigned_by')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignUuid('reservation_id')->nullable()->constrained()->onDelete('set null');
 
-            // Estado del flujo: asignada → en_proceso → terminada → verificada
-            $table->enum('status', ['asignada', 'en_proceso', 'terminada', 'verificada'])->default('asignada');
+            // Status: string sin default aquí — se aplica después del CAST al tipo nativo
+            $table->string('status', 20)->nullable();
 
-            // Pre-asignación (reemplaza camarera_assignments)
-            $table->date('assigned_date');          // Fecha para la que fue asignada
+            // Pre-asignación
+            $table->date('assigned_date');
 
             // Ejecución real
             $table->timestamp('started_at')->nullable();
             $table->timestamp('finished_at')->nullable();
-            $table->integer('duration_minutes')->nullable(); // Se calcula en app al cerrar
+            $table->integer('duration_minutes')->nullable();
 
             // Evidencia y notas
             $table->string('photo_after_url', 500)->nullable();
@@ -40,6 +41,26 @@ return new class extends Migration
             $table->index(['assigned_to', 'assigned_date']);
             $table->index('assigned_date');
         });
+
+        // 1. Convertir la columna al tipo nativo de PostgreSQL
+        //    (sin default activo — la columna es nullable en este punto)
+        DB::statement("
+            ALTER TABLE cleaning_sessions
+            ALTER COLUMN status TYPE cleaning_status
+            USING status::cleaning_status
+        ");
+
+        // 2. Ahora que el tipo es correcto, aplicar el default nativo
+        DB::statement("
+            ALTER TABLE cleaning_sessions
+            ALTER COLUMN status SET DEFAULT 'pendiente'::cleaning_status
+        ");
+
+        // 3. Ahora que hay default, quitar nullable
+        DB::statement("
+            ALTER TABLE cleaning_sessions
+            ALTER COLUMN status SET NOT NULL
+        ");
     }
 
     public function down(): void

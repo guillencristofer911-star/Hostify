@@ -14,6 +14,7 @@ use Filament\Forms\Components\TimePicker;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\Models\Role;
 
 class CleaningSessionForm
 {
@@ -38,19 +39,24 @@ class CleaningSessionForm
 
                     Select::make('assigned_to')
                         ->label('Camarera asignada')
-                        ->options(
-                            User::where('role', 'housekeeper')
+                        ->options(function () {
+                            //  Busca usuarios con rol 'camarera' vía Spatie
+                            $role = Role::where('name', 'camarera')->first();
+
+                            if (! $role) return [];
+
+                            return User::whereHas('roles', fn ($q) => $q->where('roles.id', $role->id))
                                 ->where('is_active', true)
                                 ->orderBy('name')
-                                ->pluck('name', 'id')
-                        )
+                                ->pluck('name', 'id');
+                        })
                         ->searchable()
                         ->required()
                         ->default(fn () => Auth::id())
                         ->disabled(function (): bool {
                             /** @var \App\Models\User|null $user */
                             $user = Auth::user();
-                            return $user instanceof \App\Models\User && $user->hasRole('housekeeper');
+                            return $user instanceof \App\Models\User && $user->hasRole('camarera');
                         })
                         ->dehydrated(true)
                         ->columnSpan(1),

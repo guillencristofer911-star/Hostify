@@ -96,7 +96,7 @@ class RoomsPanel extends Page
     {
         $session = CleaningSession::findOrFail($sessionId);
 
-        if ($session->assigned_to !== Auth::id()) {
+        if ((string) $session->assigned_to !== (string) Auth::id()) {
             Notification::make()->title('Sin permiso')->danger()->send();
             return;
         }

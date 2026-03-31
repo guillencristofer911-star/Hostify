@@ -10,6 +10,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
@@ -47,10 +48,10 @@ class CleaningSessionForm
                         ->required()
                         ->default(fn () => Auth::id())
                         ->disabled(function (): bool {
-                                /** @var \App\Models\User|null $user */
-                                $user = Auth::user();
-                                return $user instanceof \App\Models\User && $user->hasRole('housekeeper');
-                            })
+                            /** @var \App\Models\User|null $user */
+                            $user = Auth::user();
+                            return $user instanceof \App\Models\User && $user->hasRole('housekeeper');
+                        })
                         ->dehydrated(true)
                         ->columnSpan(1),
 
@@ -73,14 +74,14 @@ class CleaningSessionForm
                 ->columns(2)
                 ->collapsed()
                 ->schema([
-                    TextInput::make('started_at')
+                    TimePicker::make('started_at')
                         ->label('Hora inicio')
-                        ->placeholder('HH:MM')
+                        ->seconds(false)
                         ->columnSpan(1),
 
-                    TextInput::make('finished_at')
+                    TimePicker::make('finished_at')
                         ->label('Hora fin')
-                        ->placeholder('HH:MM')
+                        ->seconds(false)
                         ->columnSpan(1),
 
                     TextInput::make('duration_minutes')

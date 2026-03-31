@@ -11,45 +11,44 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        //  Crear Roles
-        $roles = ['Super Admin', 'recepcionista', 'camarera', 'supervisor'];
-        foreach ($roles as $role) {
-            Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);
+        // Garantizar que los roles existen antes de asignarlos
+        // (por si este seeder se ejecuta de forma aislada)
+        if (Role::count() === 0) {
+            $this->call(RolesAndPermissionsSeeder::class);
         }
 
-        // Usuarios iniciales
         $users = [
             [
-                'name'     => 'Admin HotelX',
-                'email'    => 'admin@hotelx.com',
-                'password' => Hash::make('hotelx2026'),
-                'phone'    => '3001234567',
-                'is_active'=> true,
-                'role'     => 'Super Admin',
+                'name'      => 'Admin Hostify',
+                'email'     => 'admin@hostify.com',
+                'password'  => Hash::make('hostify2026'),
+                'phone'     => '3001234567',
+                'is_active' => true,
+                'role'      => 'Super Admin',
             ],
             [
-                'name'     => 'Ana Recepcionista',
-                'email'    => 'ana@hotelx.com',
-                'password' => Hash::make('hotelx2026'),
-                'phone'    => '3009876543',
-                'is_active'=> true,
-                'role'     => 'recepcionista',
+                'name'      => 'Ana Recepcionista',
+                'email'     => 'ana@hostify.com',
+                'password'  => Hash::make('hostify2026'),
+                'phone'     => '3009876543',
+                'is_active' => true,
+                'role'      => 'recepcionista',
             ],
             [
-                'name'     => 'María Camarera',
-                'email'    => 'maria@hotelx.com',
-                'password' => Hash::make('hotelx2026'),
-                'phone'    => '3005551234',
-                'is_active'=> true,
-                'role'     => 'camarera',
+                'name'      => 'María Camarera',
+                'email'     => 'maria@hostify.com',
+                'password'  => Hash::make('hostify2026'),
+                'phone'     => '3005551234',
+                'is_active' => true,
+                'role'      => 'camarera',
             ],
             [
-                'name'     => 'Carlos Supervisor',
-                'email'    => 'carlos@hotelx.com',
-                'password' => Hash::make('hotelx2026'),
-                'phone'    => '3007774321',
-                'is_active'=> true,
-                'role'     => 'supervisor',
+                'name'      => 'Carlos Supervisor',
+                'email'     => 'carlos@hostify.com',
+                'password'  => Hash::make('hostify2026'),
+                'phone'     => '3007774321',
+                'is_active' => true,
+                'role'      => 'supervisor',
             ],
         ];
 
@@ -62,9 +61,9 @@ class UserSeeder extends Seeder
                 $userData
             );
 
-            $user->assignRole($role);
+            $user->syncRoles($role); // syncRoles en lugar de assignRole — idempotente
         }
 
-        $this->command->info('4 usuarios creados con roles.');
+        $this->command->info(' 4 usuarios creados y roles asignados.');
     }
 }

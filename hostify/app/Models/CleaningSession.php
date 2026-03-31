@@ -2,12 +2,9 @@
 
 namespace App\Models;
 
-use App\Enums\CleaningStatus;
-use App\Enums\RoomStatus;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CleaningSession extends Model
@@ -15,15 +12,23 @@ class CleaningSession extends Model
     use HasUuids, SoftDeletes;
 
     protected $fillable = [
-        'room_id', 'assigned_to', 'reservation_id',
-        'status', 'started_at', 'finished_at',
-        'duration_minutes', 'photo_after_url', 'notes',
+        'room_id',
+        'assigned_to',
+        'assigned_by',
+        'reservation_id',
+        'status',
+        'assigned_date',
+        'started_at',
+        'finished_at',
+        'duration_minutes',
+        'photo_after_url',
+        'notes',
     ];
 
     protected $casts = [
-        'started_at'  => 'datetime',
-        'finished_at' => 'datetime',
-        'status'      => CleaningStatus::class,
+        'assigned_date' => 'date',
+        'started_at'    => 'datetime',
+        'finished_at'   => 'datetime',
     ];
 
     //  Relaciones 
@@ -38,34 +43,13 @@ class CleaningSession extends Model
         return $this->belongsTo(User::class, 'assigned_to');
     }
 
+    public function assignedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_by');
+    }
+
     public function reservation(): BelongsTo
     {
         return $this->belongsTo(Reservation::class);
-    }
-
-    public function inventoryChecks(): HasMany
-    {
-        return $this->hasMany(InventoryCheck::class);
-    }
-
-    public function incidents(): HasMany
-    {
-        return $this->hasMany(Incident::class);
-    }
-
-    //  Acciones de negocio 
-    public function finish(): void
-    {
-        $this->loadMissing('room');
-
-        $finished = now();
-
-        $this->update([
-            'status'           => CleaningStatus::Terminada,
-            'finished_at'      => $finished,
-            'duration_minutes' => $this->started_at->diffInMinutes($finished),
-        ]);
-
-        $this->room->updateStatus(RoomStatus::Libre);
     }
 }

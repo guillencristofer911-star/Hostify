@@ -12,6 +12,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Auth;
 
 class CleaningSessionForm
 {
@@ -44,6 +45,13 @@ class CleaningSessionForm
                         )
                         ->searchable()
                         ->required()
+                        ->default(fn () => Auth::id())
+                        ->disabled(function (): bool {
+                                /** @var \App\Models\User|null $user */
+                                $user = Auth::user();
+                                return $user instanceof \App\Models\User && $user->hasRole('housekeeper');
+                            })
+                        ->dehydrated(true)
                         ->columnSpan(1),
 
                     DatePicker::make('assigned_date')

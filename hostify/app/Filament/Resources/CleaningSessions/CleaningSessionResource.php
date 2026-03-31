@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\CleaningSessions;
 
+use App\Enums\CleaningStatus;
 use App\Filament\Resources\CleaningSessions\Pages\CreateCleaningSession;
 use App\Filament\Resources\CleaningSessions\Pages\EditCleaningSession;
 use App\Filament\Resources\CleaningSessions\Pages\ListCleaningSessions;
@@ -15,7 +16,7 @@ use UnitEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Table;          
+use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 
 class CleaningSessionResource extends Resource
@@ -28,6 +29,8 @@ class CleaningSessionResource extends Resource
     protected static ?string $pluralModelLabel     = 'Sesiones de limpieza';
     protected static ?string $recordTitleAttribute = 'id';
     protected static ?int    $navigationSort       = 3;
+
+    //  Helpers de autenticación 
 
     private static function authUser(): ?User
     {
@@ -45,10 +48,40 @@ class CleaningSessionResource extends Resource
         }
     }
 
+    //  Permisos 
+
     public static function canViewAny(): bool       { return static::hasAccess('view_any_cleaning_session'); }
     public static function canCreate(): bool        { return static::hasAccess('create_cleaning_session'); }
     public static function canEdit($record): bool   { return static::hasAccess('edit_cleaning_session'); }
     public static function canDelete($record): bool { return static::hasAccess('delete_cleaning_session'); }
+
+    //  Badge de navegación (RF-17) 
+
+    public static function getNavigationBadge(): ?string
+    {
+        /** @var User|null $user */
+        $user = static::authUser();
+        if (! $user) return null;
+
+        $query = CleaningSession::query()
+            ->whereDate('assigned_date', today())
+            ->where('status', CleaningStatus::Pendiente->value);
+
+        if ($user->hasRole('housekeeper')) {
+            $query->where('assigned_to', $user->id);
+        }
+
+        $count = $query->count();
+
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
+
+    //  Form / Table 
 
     public static function form(Schema $schema): Schema
     {
@@ -59,6 +92,8 @@ class CleaningSessionResource extends Resource
     {
         return CleaningSessionsTable::configure($table);
     }
+
+    //  Páginas 
 
     public static function getPages(): array
     {

@@ -16,7 +16,9 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class CleaningSessionsTable
 {
@@ -117,6 +119,12 @@ class CleaningSessionsTable
                             'started_at' => now(),
                         ]);
 
+                        $record->room?->updateStatus(
+                            RoomStatus::Sucia,
+                            Auth::id(),
+                            'system'
+                        );
+
                         Notification::make()
                             ->title('Limpieza iniciada')
                             ->body("Hab. {$record->room?->number}")
@@ -149,7 +157,11 @@ class CleaningSessionsTable
                             'duration_minutes' => $duration,
                         ]);
 
-                        $record->room?->updateStatus(RoomStatus::Libre);
+                        $record->room?->updateStatus(
+                            RoomStatus::Libre,
+                            Auth::id(),
+                            'system'
+                        );
 
                         Notification::make()
                             ->title('Limpieza terminada')
@@ -178,6 +190,16 @@ class CleaningSessionsTable
                         ->modalCancelActionLabel('Cancelar'),
                 ]),
             ])
+
+            // RF-17: camarera solo ve sus propias sesiones del día
+            ->modifyQueryUsing(function (Builder $query): void {
+                /** @var \App\Models\User|null $user */
+                $user = Auth::user();
+                if ($user && $user->hasRole('housekeeper')) {
+                    $query->where('assigned_to', $user->id)
+                          ->whereDate('assigned_date', today());
+                }
+            })
 
             ->defaultSort('assigned_date', 'desc')
             ->striped()

@@ -30,7 +30,7 @@ class CleaningSessionResource extends Resource
     protected static ?string $recordTitleAttribute = 'id';
     protected static ?int    $navigationSort       = 3;
 
-    //  Helper autenticación 
+    // ─── Helper autenticación ────────────────────────────────────
 
     private static function authUser(): ?User
     {
@@ -46,7 +46,7 @@ class CleaningSessionResource extends Resource
         $user = static::authUser();
         if (! $user) return false;
 
-        return $user->hasAnyRole(['owner', 'Super Admin', 'supervisor', 'receptionist', 'housekeeper']);
+        return $user->hasAnyRole(['Super Admin', 'supervisor', 'recepcionista', 'camarera']);
     }
 
     private static function canManage(): bool
@@ -54,7 +54,8 @@ class CleaningSessionResource extends Resource
         $user = static::authUser();
         if (! $user) return false;
 
-        return $user->hasAnyRole(['owner', 'Super Admin', 'supervisor']);
+        // Solo Super Admin y supervisor pueden crear/editar/eliminar
+        return $user->hasAnyRole(['Super Admin', 'supervisor']);
     }
 
     //  Permisos por acción 
@@ -64,7 +65,7 @@ class CleaningSessionResource extends Resource
     public static function canEdit($record): bool   { return static::canManage(); }
     public static function canDelete($record): bool { return static::canManage(); }
 
-    //  Badge de navegación ( 
+    //  Badge de navegación 
 
     public static function getNavigationBadge(): ?string
     {
@@ -75,7 +76,8 @@ class CleaningSessionResource extends Resource
             ->whereDate('assigned_date', today())
             ->where('status', CleaningStatus::Pendiente->value);
 
-        if ($user->hasRole('housekeeper')) {
+        // Camarera solo ve su propio contador (RF-17)
+        if ($user->hasRole('camarera')) {
             $query->where('assigned_to', $user->id);
         }
 

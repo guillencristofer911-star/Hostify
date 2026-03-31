@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\CleaningSessions\Schemas;
 
+use App\Enums\CleaningStatus;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
@@ -35,12 +36,14 @@ class CleaningSessionInfolist
                     TextEntry::make('status')
                         ->label('Estado')
                         ->badge()
-                        ->color(fn ($state) => match ($state) {
-                            \App\Enums\CleaningStatus::Pendiente  => 'warning',
-                            \App\Enums\CleaningStatus::EnProceso  => 'info',
-                            \App\Enums\CleaningStatus::Terminada  => 'success',
-                            default                               => 'gray',
-                        }),
+                        ->formatStateUsing(fn ($state) => $state instanceof CleaningStatus
+                            ? $state->label()
+                            : $state
+                        )
+                        ->color(fn ($state) => $state instanceof CleaningStatus
+                            ? $state->color()
+                            : 'gray'
+                        ),
                 ]),
 
             Section::make('Registro de tiempo')
@@ -49,15 +52,18 @@ class CleaningSessionInfolist
                 ->schema([
                     TextEntry::make('started_at')
                         ->label('Hora inicio')
-                        ->dateTime('H:i'),
+                        ->dateTime('H:i')
+                        ->placeholder('—'),
 
                     TextEntry::make('finished_at')
                         ->label('Hora fin')
-                        ->dateTime('H:i'),
+                        ->dateTime('H:i')
+                        ->placeholder('—'),
 
                     TextEntry::make('duration_minutes')
                         ->label('Duración')
-                        ->suffix(' min'),
+                        ->suffix(' min')
+                        ->placeholder('—'),
                 ]),
 
             Section::make('Evidencia')

@@ -191,11 +191,10 @@ class CleaningSessionsTable
                 ]),
             ])
 
-            // RF-17: camarera solo ve sus propias sesiones del día
             ->modifyQueryUsing(function (Builder $query): void {
                 /** @var \App\Models\User|null $user */
                 $user = Auth::user();
-                if ($user && $user->hasRole('housekeeper')) {
+                if ($user && $user->hasRole('camarera')) {  
                     $query->where('assigned_to', $user->id)
                           ->whereDate('assigned_date', today());
                 }

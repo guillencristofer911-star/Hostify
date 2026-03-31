@@ -12,7 +12,8 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('room_id')->constrained()->onDelete('cascade');
             $table->foreignUuid('item_id')->constrained('inventory_items')->onDelete('cascade');
-            $table->smallInteger('current_quantity')->default(0);
+            $table->unsignedSmallInteger('expected_quantity')->default(1);
+            $table->unsignedSmallInteger('current_quantity')->default(0);
             $table->softDeletes();
             $table->timestamps();
 

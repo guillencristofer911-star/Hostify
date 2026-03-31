@@ -10,16 +10,28 @@ class InventoryItemSeeder extends Seeder
     public function run(): void
     {
         $items = [
-            ['name' => 'Toalla de baño',    'unit' => 'unidad',  'min_quantity' => 2],
-            ['name' => 'Toalla de mano',    'unit' => 'unidad',  'min_quantity' => 2],
-            ['name' => 'Sábana cama',       'unit' => 'juego',   'min_quantity' => 1],
-            ['name' => 'Funda almohada',    'unit' => 'unidad',  'min_quantity' => 2],
-            ['name' => 'Jabón de baño',     'unit' => 'unidad',  'min_quantity' => 2],
-            ['name' => 'Shampoo',           'unit' => 'unidad',  'min_quantity' => 1],
-            ['name' => 'Papel higiénico',   'unit' => 'rollo',   'min_quantity' => 4],
-            ['name' => 'Control remoto TV', 'unit' => 'unidad',  'min_quantity' => 1],
-            ['name' => 'Vaso de baño',      'unit' => 'unidad',  'min_quantity' => 2],
-            ['name' => 'Bolsa de basura',   'unit' => 'unidad',  'min_quantity' => 2],
+            // Ropa blanca
+            ['name' => 'Toalla de baño',     'category' => 'ropa_blanca',  'unit' => 'unidad', 'min_quantity' => 2],
+            ['name' => 'Toalla de mano',     'category' => 'ropa_blanca',  'unit' => 'unidad', 'min_quantity' => 2],
+            ['name' => 'Sábana cama',        'category' => 'ropa_blanca',  'unit' => 'juego',  'min_quantity' => 1],
+            ['name' => 'Funda almohada',     'category' => 'ropa_blanca',  'unit' => 'unidad', 'min_quantity' => 2],
+
+            // Amenidades
+            ['name' => 'Jabón de baño',      'category' => 'amenidades',   'unit' => 'unidad', 'min_quantity' => 2],
+            ['name' => 'Shampoo',            'category' => 'amenidades',   'unit' => 'unidad', 'min_quantity' => 1],
+            ['name' => 'Acondicionador',     'category' => 'amenidades',   'unit' => 'unidad', 'min_quantity' => 1],
+            ['name' => 'Papel higiénico',    'category' => 'amenidades',   'unit' => 'rollo',  'min_quantity' => 4],
+            ['name' => 'Vaso de baño',       'category' => 'amenidades',   'unit' => 'unidad', 'min_quantity' => 2],
+            ['name' => 'Bolsa de basura',    'category' => 'amenidades',   'unit' => 'unidad', 'min_quantity' => 2],
+
+            // Electrónico
+            ['name' => 'Control remoto TV',  'category' => 'electronico',  'unit' => 'unidad', 'min_quantity' => 1],
+            ['name' => 'Control A/C',        'category' => 'electronico',  'unit' => 'unidad', 'min_quantity' => 1],
+
+            // Mobiliario / dotación
+            ['name' => 'Almohada',           'category' => 'dotacion',     'unit' => 'unidad', 'min_quantity' => 2],
+            ['name' => 'Cobija',             'category' => 'dotacion',     'unit' => 'unidad', 'min_quantity' => 1],
+            ['name' => 'Percha ropa',        'category' => 'dotacion',     'unit' => 'unidad', 'min_quantity' => 4],
         ];
 
         foreach ($items as $item) {
@@ -29,6 +41,6 @@ class InventoryItemSeeder extends Seeder
             );
         }
 
-        $this->command->info(' 10 artículos de inventario creados.');
+        $this->command->info('✔ 15 artículos de inventario creados con categoría.');
     }
 }

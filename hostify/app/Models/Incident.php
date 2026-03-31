@@ -2,11 +2,10 @@
 
 namespace App\Models;
 
-use App\Enums\IncidentStatus;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Incident extends Model
 {
@@ -17,20 +16,19 @@ class Incident extends Model
         'reservation_id',
         'cleaning_session_id',
         'reported_by',
+        'resolved_by',
+        'title',
         'category',
+        'priority',
         'status',
         'description',
         'photo_url',
         'resolved_at',
-        'resolved_by',
     ];
 
     protected $casts = [
         'resolved_at' => 'datetime',
-        'status'      => IncidentStatus::class,
     ];
-
-    //  Relaciones 
 
     public function room(): BelongsTo
     {
@@ -55,17 +53,5 @@ class Incident extends Model
     public function resolvedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'resolved_by');
-    }
-
-    //  Scopes 
-
-    public function scopePending($query)
-    {
-        return $query->where('status', IncidentStatus::Pendiente);
-    }
-
-    public function scopeOpen($query)
-    {
-        return $query->whereIn('status', [IncidentStatus::Pendiente, IncidentStatus::EnProceso]);
     }
 }

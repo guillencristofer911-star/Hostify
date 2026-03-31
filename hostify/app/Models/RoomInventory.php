@@ -2,26 +2,28 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RoomInventory extends Model
 {
     use HasUuids, SoftDeletes;
 
+    protected $table = 'room_inventory';
+
     protected $fillable = [
         'room_id',
         'item_id',
+        'expected_quantity',
         'current_quantity',
     ];
 
     protected $casts = [
-        'current_quantity' => 'integer',
+        'expected_quantity' => 'integer',
+        'current_quantity'  => 'integer',
     ];
-
-    //  Relaciones 
 
     public function room(): BelongsTo
     {
@@ -33,10 +35,9 @@ class RoomInventory extends Model
         return $this->belongsTo(InventoryItem::class, 'item_id');
     }
 
-    //  Helpers 
-
-    public function isBelowMinStock(): bool
+    // Helper: 
+    public function hasMissing(): bool
     {
-        return $this->current_quantity < $this->item->min_stock;
+        return $this->current_quantity < $this->expected_quantity;
     }
 }

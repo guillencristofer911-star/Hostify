@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Charge extends Model
 {
@@ -14,17 +14,20 @@ class Charge extends Model
     protected $fillable = [
         'reservation_id',
         'registered_by',
+        'type',
         'description',
+        'quantity',
+        'unit_price',
         'amount',
         'charged_at',
     ];
 
     protected $casts = [
-        'amount'     => 'decimal:2',
-        'charged_at' => 'datetime',
+        'unit_price'  => 'decimal:2',
+        'amount'      => 'decimal:2',
+        'quantity'    => 'integer',
+        'charged_at'  => 'datetime',
     ];
-
-    //  Relaciones 
 
     public function reservation(): BelongsTo
     {

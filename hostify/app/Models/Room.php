@@ -3,8 +3,9 @@
 namespace App\Models;
 
 use App\Enums\RoomStatus;
-use Illuminate\Database\Eloquent\Model;
+use App\Models\RoomStatusLog;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,18 +15,48 @@ class Room extends Model
     use HasUuids, SoftDeletes;
 
     protected $fillable = [
-        'room_type_id', 'number', 'floor',
-        'status', 'is_active', 'status_changed_at', 'notes',
+        'room_type_id',
+        'number',
+        'floor',
+        'status',
+        'status_changed_at',
+        'alert_minutes_threshold',
+        'notes',
+        'is_active',
     ];
 
     protected $casts = [
-        'is_active'         => 'boolean',
-        'status_changed_at' => 'datetime',
-        'floor'             => 'integer',
-        'status'            => RoomStatus::class,
+        'is_active'               => 'boolean',
+        'floor'                   => 'integer',
+        'alert_minutes_threshold' => 'integer',
+        'status_changed_at'       => 'datetime',
+        'status'                  => RoomStatus::class, // cast al Enum
     ];
 
-    //  Relaciones 
+    // ─── Método clave ────────────────────────────────────────────
+    /**
+     * Cambia el estado de la habitación y registra el log automáticamente.
+     * Usar siempre este método en lugar de actualizar status directamente.
+     */
+    public function updateStatus(RoomStatus $newStatus, ?int $changedBy = null, string $source = 'system'): void
+    {
+        $oldStatus = $this->status?->value ?? 'libre';
+
+        $this->update([
+            'status'            => $newStatus->value,
+            'status_changed_at' => now(),
+        ]);
+
+        RoomStatusLog::create([
+            'room_id'     => $this->id,
+            'changed_by'  => $changedBy,
+            'from_status' => $oldStatus,
+            'to_status'   => $newStatus->value,
+            'source'      => $source,
+            'changed_at'  => now(),
+        ]);
+    }
+    // ─────────────────────────────────────────────────────────────
 
     public function roomType(): BelongsTo
     {
@@ -42,12 +73,12 @@ class Room extends Model
         return $this->hasMany(CleaningSession::class);
     }
 
-    public function camareraAssignments(): HasMany
+    public function statusLogs(): HasMany
     {
-        return $this->hasMany(CamareraAssignment::class);
+        return $this->hasMany(RoomStatusLog::class);
     }
 
-    public function roomInventory(): HasMany
+    public function inventory(): HasMany
     {
         return $this->hasMany(RoomInventory::class);
     }
@@ -55,33 +86,5 @@ class Room extends Model
     public function incidents(): HasMany
     {
         return $this->hasMany(Incident::class);
-    }
-
-    //  Scopes 
-
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
-
-    public function scopeAvailable($query)
-    {
-        return $query->where('is_active', true)
-                     ->where('status', RoomStatus::Libre);
-    }
-
-    //  Helpers 
-
-    public function updateStatus(string|RoomStatus $status): void
-    {
-        $this->update([
-            'status'            => $status instanceof RoomStatus ? $status : RoomStatus::from($status),
-            'status_changed_at' => now(),
-        ]);
-    }
-
-    public function isAvailable(): bool
-    {
-        return $this->status === RoomStatus::Libre && $this->is_active;
     }
 }

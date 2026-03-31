@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InventoryCheck extends Model
@@ -13,14 +13,17 @@ class InventoryCheck extends Model
     protected $fillable = [
         'cleaning_session_id',
         'item_id',
+        'expected_quantity',
         'quantity_found',
+        'is_ok',
+        'notes',
     ];
 
     protected $casts = [
-        'quantity_found' => 'integer',
+        'is_ok'             => 'boolean',
+        'expected_quantity' => 'integer',
+        'quantity_found'    => 'integer',
     ];
-
-    //  Relaciones 
 
     public function cleaningSession(): BelongsTo
     {

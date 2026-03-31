@@ -2,53 +2,51 @@
 
 namespace App\Models;
 
-use App\Enums\InvoiceStatus;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Invoice extends Model
 {
-    use HasUuids, SoftDeletes, HasFactory;
+    use HasUuids, SoftDeletes;
 
     protected $fillable = [
         'reservation_id',
+        'guest_id',
         'invoice_number',
         'subtotal',
+        'extras_total',
         'taxes',
         'total',
         'status',
+        'issued_at',
         'sent_at',
         'sent_to_email',
     ];
 
     protected $casts = [
-        'subtotal' => 'decimal:2',
-        'taxes'    => 'decimal:2',
-        'total'    => 'decimal:2',
-        'sent_at'  => 'datetime',
-        'status'   => InvoiceStatus::class,
+        'subtotal'     => 'decimal:2',
+        'extras_total' => 'decimal:2',
+        'taxes'        => 'decimal:2',
+        'total'        => 'decimal:2',
+        'issued_at'    => 'datetime',
+        'sent_at'      => 'datetime',
     ];
-
-    //  Relaciones 
 
     public function reservation(): BelongsTo
     {
         return $this->belongsTo(Reservation::class);
     }
 
-    //  Helpers 
-
-    /**
-     * Genera un n\u00famero de factura \u00fanico.
-     * Formato: FAC-YYYYMMDD-XXXX  (m\u00e1x 17 caracteres, cabe en varchar(20))
-     * Ejemplo: FAC-20260328-A3K9
-     */
-    public static function generateNumber(): string
+    public function guest(): BelongsTo
     {
-        return 'FAC-' . now()->format('Ymd') . '-' . Str::upper(Str::random(4));
+        return $this->belongsTo(Guest::class);
+    }
+
+    public function charges(): HasMany
+    {
+        return $this->hasMany(Charge::class, 'reservation_id', 'reservation_id');
     }
 }

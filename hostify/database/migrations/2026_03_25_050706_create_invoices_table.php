@@ -11,11 +11,14 @@ return new class extends Migration
         Schema::create('invoices', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('reservation_id')->constrained()->onDelete('cascade');
-            $table->string('invoice_number', 30)->unique(); // ampliado de 20 a 30 como respaldo
+            $table->foreignUuid('guest_id')->constrained('guests')->onDelete('restrict'); // ← UUID, no foreignId
+            $table->string('invoice_number', 30)->unique();
             $table->decimal('subtotal', 10, 2)->default(0);
+            $table->decimal('extras_total', 10, 2)->default(0);
             $table->decimal('taxes', 10, 2)->default(0);
-            $table->decimal('total', 10, 2);
+            $table->decimal('total', 10, 2)->default(0);
             $table->enum('status', ['borrador', 'emitida', 'pagada', 'anulada'])->default('borrador');
+            $table->timestamp('issued_at')->nullable();
             $table->timestamp('sent_at')->nullable();
             $table->string('sent_to_email', 150)->nullable();
             $table->softDeletes();
@@ -23,6 +26,7 @@ return new class extends Migration
 
             $table->unique('reservation_id');
             $table->index('status');
+            $table->index('guest_id');
         });
     }
 

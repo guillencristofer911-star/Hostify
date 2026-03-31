@@ -11,6 +11,7 @@ use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class ViewCleaningSession extends ViewRecord
 {
@@ -22,7 +23,7 @@ class ViewCleaningSession extends ViewRecord
         $record = $this->record;
 
         return [
-            
+
             Action::make('iniciar')
                 ->label('Iniciar limpieza')
                 ->icon('heroicon-o-play')
@@ -39,6 +40,12 @@ class ViewCleaningSession extends ViewRecord
                         'started_at' => now(),
                     ]);
 
+                    $record->room?->updateStatus(
+                        RoomStatus::Sucia,
+                        Auth::id(),
+                        'system'
+                    );
+
                     Notification::make()
                         ->title('Limpieza iniciada')
                         ->body("Hab. {$record->room?->number}")
@@ -48,7 +55,6 @@ class ViewCleaningSession extends ViewRecord
                     $this->refreshFormData(['status', 'started_at']);
                 }),
 
-            
             Action::make('terminar')
                 ->label('Marcar terminada')
                 ->icon('heroicon-o-check-circle')
@@ -71,8 +77,12 @@ class ViewCleaningSession extends ViewRecord
                         'duration_minutes' => $duration,
                     ]);
 
-                    // Marcar habitación como libre (RF-13/RF-15)
-                    $record->room?->updateStatus(RoomStatus::Libre);
+                    // Consistente con CleaningSessionsTable — con actor registrado
+                    $record->room?->updateStatus(
+                        RoomStatus::Libre,
+                        Auth::id(),
+                        'system'
+                    );
 
                     Notification::make()
                         ->title('Limpieza terminada')

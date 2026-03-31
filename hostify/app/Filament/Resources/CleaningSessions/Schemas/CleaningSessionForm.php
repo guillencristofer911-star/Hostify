@@ -40,9 +40,7 @@ class CleaningSessionForm
                     Select::make('assigned_to')
                         ->label('Camarera asignada')
                         ->options(function () {
-                            //  Busca usuarios con rol 'camarera' vía Spatie
                             $role = Role::where('name', 'camarera')->first();
-
                             if (! $role) return [];
 
                             return User::whereHas('roles', fn ($q) => $q->where('roles.id', $role->id))
@@ -75,10 +73,13 @@ class CleaningSessionForm
                         ->columnSpan(1),
                 ]),
 
+            // Sección solo visible en edición — el flujo de tiempos
+            // se controla por las acciones iniciar/terminar, no manualmente al crear
             Section::make('Registro de tiempo')
                 ->icon('heroicon-o-clock')
                 ->columns(2)
                 ->collapsed()
+                ->hiddenOn('create')
                 ->schema([
                     TimePicker::make('started_at')
                         ->label('Hora inicio')

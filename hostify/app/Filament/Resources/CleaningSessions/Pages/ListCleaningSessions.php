@@ -37,34 +37,34 @@ class ListCleaningSessions extends ListRecords
 
             'pendientes' => Tab::make('Pendientes')
                 ->icon('heroicon-o-clock')
-                ->badge(static fn () => CleaningSession::where('status', CleaningStatus::Pendiente)->count())
+                ->badge(static fn () => CleaningSession::where('status', CleaningStatus::Pendiente->value)->count())
                 ->badgeColor('warning')
                 ->deferBadge()
                 ->modifyQueryUsing(fn (Builder $query) =>
-                    $query->where('status', CleaningStatus::Pendiente)
+                    $query->where('status', CleaningStatus::Pendiente->value)
                           ->orderBy('assigned_date', 'asc')
                 ),
 
             'en_proceso' => Tab::make('En proceso')
                 ->icon('heroicon-o-sparkles')
-                ->badge(static fn () => CleaningSession::where('status', CleaningStatus::EnProceso)->count())
+                ->badge(static fn () => CleaningSession::where('status', CleaningStatus::EnProceso->value)->count())
                 ->badgeColor('info')
                 ->deferBadge()
                 ->modifyQueryUsing(fn (Builder $query) =>
-                    $query->where('status', CleaningStatus::EnProceso)
+                    $query->where('status', CleaningStatus::EnProceso->value)
                           ->orderBy('started_at', 'asc')
                 ),
 
             'terminadas' => Tab::make('Terminadas hoy')
                 ->icon('heroicon-o-check-circle')
-                ->badge(static fn () => CleaningSession::where('status', CleaningStatus::Terminada)
+                ->badge(static fn () => CleaningSession::where('status', CleaningStatus::Terminada->value)
                     ->whereDate('assigned_date', today())
                     ->count()
                 )
                 ->badgeColor('success')
                 ->deferBadge()
                 ->modifyQueryUsing(fn (Builder $query) =>
-                    $query->where('status', CleaningStatus::Terminada)
+                    $query->where('status', CleaningStatus::Terminada->value)
                           ->orderBy('finished_at', 'desc')
                 ),
 

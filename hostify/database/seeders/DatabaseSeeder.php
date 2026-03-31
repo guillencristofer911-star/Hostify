@@ -36,6 +36,9 @@ class DatabaseSeeder extends Seeder
 
             // 9. Cierre de turno (depende de users)
             ShiftCloseSeeder::class,
+
+            // 10. Sesiones de limpieza 
+            CleaningSessionSeeder::class,
         ]);
     }
 }

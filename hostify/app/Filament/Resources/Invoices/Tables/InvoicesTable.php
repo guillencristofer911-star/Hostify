@@ -58,9 +58,15 @@ class InvoicesTable
                 TextColumn::make('status')
                     ->label('Estado')
                     ->badge()
-                    ->color(fn (InvoiceStatus $state): string => $state->color())
-                    ->icon(fn (InvoiceStatus $state): string => $state->icon())
-                    ->formatStateUsing(fn (InvoiceStatus $state): string => $state->label())
+                    ->color(fn ($state): string => InvoiceStatus::tryFrom(
+                        $state instanceof InvoiceStatus ? $state->value : (string) $state
+                    )?->color() ?? 'gray')
+                    ->icon(fn ($state): string => InvoiceStatus::tryFrom(
+                        $state instanceof InvoiceStatus ? $state->value : (string) $state
+                    )?->icon() ?? 'heroicon-o-question-mark-circle')
+                    ->formatStateUsing(fn ($state): string => InvoiceStatus::tryFrom(
+                        $state instanceof InvoiceStatus ? $state->value : (string) $state
+                    )?->label() ?? (string) $state)
                     ->toggleable(),
 
                 TextColumn::make('created_at')

@@ -27,6 +27,7 @@ class Invoice extends Model
     ];
 
     protected $casts = [
+        'status' => \App\Enums\InvoiceStatus::class,
         'subtotal'     => 'decimal:2',
         'extras_total' => 'decimal:2',
         'taxes'        => 'decimal:2',

@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Enums\RoomStatus;
-use App\Models\RoomStatusLog;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -30,14 +30,24 @@ class Room extends Model
         'floor'                   => 'integer',
         'alert_minutes_threshold' => 'integer',
         'status_changed_at'       => 'datetime',
-        'status'                  => RoomStatus::class, // cast al Enum
+        'status'                  => RoomStatus::class,
     ];
 
-    // ─── Método clave ────────────────────────────────────────────
-    /**
-     * Cambia el estado de la habitación y registra el log automáticamente.
-     * Usar siempre este método en lugar de actualizar status directamente.
-     */
+    // ─── Scopes ──────────────────────────────────────────────────
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeAvailable(Builder $query): Builder
+    {
+        return $query->where('is_active', true)
+                     ->where('status', RoomStatus::Libre);
+    }
+
+    // ─── Métodos ─────────────────────────────────────────────────
+
     public function updateStatus(RoomStatus $newStatus, ?int $changedBy = null, string $source = 'system'): void
     {
         $oldStatus = $this->status?->value ?? 'libre';
@@ -56,7 +66,8 @@ class Room extends Model
             'changed_at'  => now(),
         ]);
     }
-    // ─────────────────────────────────────────────────────────────
+
+    // ─── Relaciones ───────────────────────────────────────────────
 
     public function roomType(): BelongsTo
     {

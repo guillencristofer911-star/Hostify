@@ -9,8 +9,6 @@ class GuestFactory extends Factory
 {
     protected $model = Guest::class;
 
-    private static int $ccCounter = 40000000;
-
     public function definition(): array
     {
         $documentTypes = [
@@ -39,27 +37,28 @@ class GuestFactory extends Factory
             'Roberto Peña', 'Claudia Mendez', 'Javier Ibáñez', 'Sandra Delgado',
         ];
 
-        $docType = $documentTypes[array_rand($documentTypes)];
-
         $letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $docType  = $documentTypes[array_rand($documentTypes)];
 
         $docNumber = match ($docType) {
-            'cc'                 => (string)(self::$ccCounter++),
-            'ti'                 => (string) random_int(100000000, 999999999),
-            'passport'           => $letters[random_int(0,25)] . $letters[random_int(0,25)] . random_int(100000, 999999),
-            'cedula_extranjeria' => $letters[random_int(0,25)] . 'E' . random_int(100000, 999999),
-            default              => (string) random_int(10000000, 99999999),
+            'cc'                 => (string) random_int(10_000_000, 1_999_999_999),
+            'ti'                 => (string) random_int(100_000_000, 999_999_999),
+            'passport'           => $letters[random_int(0, 25)] . $letters[random_int(0, 25)] . random_int(100000, 999999),
+            'cedula_extranjeria' => $letters[random_int(0, 25)] . 'E' . random_int(100000, 999999),
+            default              => (string) random_int(10_000_000, 1_999_999_999),
         };
 
         $name  = $names[array_rand($names)];
-        $rand  = random_int(1000, 9999);
-        $email = strtolower(str_replace(' ', '.', $name)) . $rand . '@hotelx.test';
+        $rand  = random_int(10000, 99999);
+        $email = strtolower(
+            str_replace([' ', 'á','é','í','ó','ú','ñ'], ['.','a','e','i','o','u','n'], $name)
+        ) . $rand . '@hotelx.test';
 
         return [
             'full_name'       => $name,
             'document_type'   => $docType,
             'document_number' => $docNumber,
-            'phone'           => '3' . random_int(100000000, 999999999),
+            'phone'           => '3' . random_int(100_000_000, 999_999_999),
             'email'           => $email,
             'nationality'     => $nationalities[array_rand($nationalities)],
             'is_active'       => true,

@@ -4,19 +4,10 @@ namespace Database\Factories;
 
 use App\Models\Guest;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Faker\Factory as FakerFactory;
 
 class GuestFactory extends Factory
 {
     protected $model = Guest::class;
-
-    protected $faker;
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->faker = FakerFactory::create('es_CO');
-    }
 
     private array $documentTypes = [
         'cc', 'cc', 'cc', 'cc', 'cc', 'cc',
@@ -33,7 +24,10 @@ class GuestFactory extends Factory
 
     public function definition(): array
     {
-        $docType = $this->faker->randomElement($this->documentTypes);
+        $documentTypes = $this->documentTypes;
+        $nationalities  = $this->nationalities;
+
+        $docType = $this->faker->randomElement($documentTypes);
 
         $docNumber = match ($docType) {
             'cc'                 => (string) $this->faker->unique()->numberBetween(10000000, 99999999),
@@ -49,7 +43,7 @@ class GuestFactory extends Factory
             'document_number' => $docNumber,
             'phone'           => '3' . $this->faker->numerify('#########'),
             'email'           => $this->faker->unique()->safeEmail(),
-            'nationality'     => $this->faker->randomElement($this->nationalities),
+            'nationality'     => $this->faker->randomElement($nationalities),
             'is_active'       => true,
         ];
     }

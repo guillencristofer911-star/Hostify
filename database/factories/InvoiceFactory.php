@@ -9,12 +9,14 @@ class InvoiceFactory extends Factory
 {
     protected $model = Invoice::class;
 
+    private static int $invoiceCounter = 1;
+
     public function definition(): array
     {
-        $subtotal = $this->faker->randomFloat(2, 80000, 900000);
+        $subtotal = round(rand(80000, 900000) / 100) * 100;
 
         return [
-            'invoice_number' => 'FAC-' . $this->faker->unique()->numerify('######'),
+            'invoice_number' => 'FAC-' . str_pad(self::$invoiceCounter++, 6, '0', STR_PAD_LEFT),
             'subtotal'       => $subtotal,
             'taxes'          => 0,
             'total'          => $subtotal,

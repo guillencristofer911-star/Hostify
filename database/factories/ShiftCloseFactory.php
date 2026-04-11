@@ -13,9 +13,9 @@ class ShiftCloseFactory extends Factory
 
     public function definition(): array
     {
-        $cash       = $this->faker->randomFloat(2, 100000, 600000);
-        $card       = $this->faker->randomFloat(2, 100000, 600000);
-        $counted    = $cash + $this->faker->randomFloat(2, -8000, 8000);
+        $cash       = round(rand(100000, 600000) / 100) * 100;
+        $card       = round(rand(100000, 600000) / 100) * 100;
+        $counted    = $cash + rand(-8000, 8000);
         $difference = round($counted - $cash, 2);
         $margin     = 5000;
 
@@ -34,9 +34,7 @@ class ShiftCloseFactory extends Factory
             'difference'         => $difference,
             'within_margin'      => abs($difference) <= $margin,
             'margin_threshold'   => $margin,
-            'observations'       => $this->faker->boolean(20)
-                ? $this->faker->sentence()
-                : null,
+            'observations'       => rand(1, 5) === 1 ? 'Observación de turno de prueba.' : null,
             'validated_at'       => $end->copy()->addMinutes(rand(10, 45)),
             'status'             => ShiftCloseStatus::Validado->value,
         ];
@@ -45,11 +43,10 @@ class ShiftCloseFactory extends Factory
     public function cerrado(): static
     {
         return $this->state(function () {
-            $start = now()->subDay()->setTime(7, 0);
-            $end   = $start->copy()->addHours(8);
-            $cash  = $this->faker->randomFloat(2, 100000, 500000);
-            $counted = $cash + $this->faker->randomFloat(2, -8000, 8000);
-
+            $start   = now()->subDay()->setTime(7, 0);
+            $end     = $start->copy()->addHours(8);
+            $cash    = round(rand(100000, 500000) / 100) * 100;
+            $counted = $cash + rand(-8000, 8000);
             return [
                 'shift_start'        => $start,
                 'shift_end'          => $end,

@@ -4,17 +4,25 @@ namespace Database\Factories;
 
 use App\Models\Guest;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Faker\Factory as FakerFactory;
 
 class GuestFactory extends Factory
 {
     protected $model = Guest::class;
 
-    // Tipos de documento con peso realista para Colombia
+    protected $faker;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->faker = FakerFactory::create('es_CO');
+    }
+
     private array $documentTypes = [
-        'cc', 'cc', 'cc', 'cc', 'cc', 'cc',   // 60% cédula colombiana
-        'passport', 'passport',                  // 20% pasaporte
-        'cedula_extranjeria',                    // 10% cédula extranjería
-        'ti',                                    // 10% tarjeta identidad
+        'cc', 'cc', 'cc', 'cc', 'cc', 'cc',
+        'passport', 'passport',
+        'cedula_extranjeria',
+        'ti',
     ];
 
     private array $nationalities = [

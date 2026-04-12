@@ -10,8 +10,6 @@ use Filament\Schemas\Schema;
 
 class GuestForm
 {
-    // Keys = valores guardados en BD. Values = etiquetas mostradas al usuario.
-    // NUNCA cambiar los keys — están en la BD de todos los registros existentes.
     private const DOCUMENT_TYPES = [
         'CC'        => 'Cédula de Ciudadanía',
         'CE'        => 'Cédula de Extranjería',
@@ -40,12 +38,11 @@ class GuestForm
                 ->label('Tipo de documento')
                 ->options(self::DOCUMENT_TYPES)
                 ->required()
-                // ->native(true): select HTML nativo del navegador.
-                // Choices.js (->native(false)) secuestra el <select> del DOM y
-                // no siempre dispara el evento 'change' nativo que Livewire necesita
-                // para leer el valor en el submit → intermitencia 100% reproducible.
-                // El select nativo es determinista: Livewire siempre recibe el valor.
                 ->native(true)
+                ->live()
+                ->afterStateUpdated(function ($livewire) {
+                    $livewire->validateOnly('data.document_number');
+                })
                 ->validationMessages(['required' => 'El tipo de documento es obligatorio.']),
 
             TextInput::make('document_number')
@@ -53,9 +50,16 @@ class GuestForm
                 ->required()
                 ->extraInputAttributes(['required' => false])
                 ->regex('/^[a-zA-Z0-9\-\.]+$/')
+                ->rules(function (callable $get): array {
+                    if ($get('document_type') === 'NIT') {
+                        return ['digits:9'];
+                    }
+                    return [];
+                })
                 ->validationMessages([
                     'required' => 'El número de documento es obligatorio.',
                     'regex'    => 'El número de documento solo permite letras, números, guiones y puntos.',
+                    'digits'   => 'El NIT debe tener exactamente 9 dígitos numéricos.',
                     'unique'   => 'El número de documento ya está registrado.',
                 ])
                 ->unique(ignoreRecord: true)

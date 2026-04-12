@@ -27,12 +27,6 @@ class EditGuest extends EditRecord
     {
         return 'Editar';
     }
-
-    // mutateFormDataBeforeFill eliminado: con ->native(true) Filament hidrata
-    // el Select directamente desde el modelo sin intervención manual.
-    // El valor de BD ('CC', 'CE', 'Pasaporte', 'NIT') coincide exactamente
-    // con los keys de ->options() → el <select> nativo marca la opción correcta.
-
     protected function getHeaderActions(): array
     {
         return [

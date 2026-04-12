@@ -7,11 +7,27 @@ use App\Filament\Resources\ShiftCloses\ShiftCloseResource;
 use App\Models\ShiftClose;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Notifications\Notification;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
 
 class CreateShiftClose extends CreateRecord
 {
     protected static string $resource = ShiftCloseResource::class;
+
+    public function getTitle(): string|Htmlable
+    {
+        return 'Crear Cierre de Turno';
+    }
+
+    public function getHeading(): string|Htmlable
+    {
+        return 'Crear Cierre de Turno';
+    }
+
+    public function getBreadcrumb(): string
+    {
+        return 'Crear';
+    }
 
     protected function getCreateFormAction(): \Filament\Actions\Action
     {
@@ -39,7 +55,6 @@ class CreateShiftClose extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // ← usa Enum en lugar de string crudo
         $hayTurnoAbierto = ShiftClose::where('status', ShiftCloseStatus::Abierto)->exists();
 
         if ($hayTurnoAbierto) {
@@ -53,7 +68,7 @@ class CreateShiftClose extends CreateRecord
         }
 
         $data['opened_by']   = Auth::id();
-        $data['shift_start'] = now();                         
+        $data['shift_start'] = now();
         $data['status']      = ShiftCloseStatus::Abierto->value;
 
         return $data;

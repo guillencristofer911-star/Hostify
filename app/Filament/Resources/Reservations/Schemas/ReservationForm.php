@@ -23,7 +23,10 @@ class ReservationForm
             // HUÉSPED
             Select::make('guest_id')
                 ->label('Huésped')
+                ->placeholder('Selecciona un huésped')
                 ->searchable()
+                ->searchPrompt('Busca por nombre o documento...')
+                ->noSearchResultsMessage('No se encontraron huéspedes.')
                 ->getSearchResultsUsing(function (string $search) {
                     return Guest::active()
                         ->where(function ($q) use ($search) {
@@ -39,10 +42,13 @@ class ReservationForm
                     return $g?->full_label ?? $value;
                 })
                 ->required()
+                ->validationMessages(['required' => 'El campo Huésped es obligatorio.'])
                 ->createOptionForm([
                     TextInput::make('full_name')
                         ->label('Nombre completo')
-                        ->required(),
+                        ->required()
+                        ->extraInputAttributes(['required' => false])
+                        ->validationMessages(['required' => 'El nombre completo es obligatorio.']),
                     Select::make('document_type')
                         ->label('Tipo documento')
                         ->options([
@@ -50,16 +56,21 @@ class ReservationForm
                             'CE'        => 'Cédula Extranjería',
                             'Pasaporte' => 'Pasaporte',
                         ])
-                        ->required(),
+                        ->required()
+                        ->native(false)
+                        ->validationMessages(['required' => 'El tipo de documento es obligatorio.']),
                     TextInput::make('document_number')
                         ->label('Número documento')
-                        ->required(),
+                        ->required()
+                        ->extraInputAttributes(['required' => false])
+                        ->validationMessages(['required' => 'El número de documento es obligatorio.']),
                     TextInput::make('phone')
                         ->label('Teléfono')
                         ->tel(),
                     TextInput::make('email')
                         ->label('Email')
-                        ->email(),
+                        ->email()
+                        ->validationMessages(['email' => 'El correo electrónico no tiene un formato válido.']),
                 ])
                 ->createOptionUsing(function (array $data) {
                     return Guest::create(array_merge($data, ['is_active' => true]))->id;
@@ -69,6 +80,12 @@ class ReservationForm
             DatePicker::make('check_in_date')
                 ->label('Fecha entrada')
                 ->required()
+                ->native(false)
+                ->validationMessages([
+                    'required'       => 'La fecha de entrada es obligatoria.',
+                    'date'           => 'La fecha de entrada no tiene un formato válido.',
+                    'after_or_equal' => 'La fecha de entrada no puede ser anterior a hoy.',
+                ])
                 ->minDate(today())
                 ->live()
                 ->afterStateUpdated(function (Set $set) {
@@ -79,6 +96,12 @@ class ReservationForm
             DatePicker::make('check_out_date')
                 ->label('Fecha salida')
                 ->required()
+                ->native(false)
+                ->validationMessages([
+                    'required' => 'La fecha de salida es obligatoria.',
+                    'date'     => 'La fecha de salida no tiene un formato válido.',
+                    'after'    => 'La fecha de salida debe ser posterior a la fecha de entrada.',
+                ])
                 ->minDate(fn (Get $get) => $get('check_in_date') ?? today())
                 ->live()
                 ->afterStateUpdated(function (Set $set) {
@@ -88,8 +111,12 @@ class ReservationForm
             // HABITACIÓN
             Select::make('room_id')
                 ->label('Habitación')
+                ->placeholder('Selecciona una habitación')
                 ->required()
                 ->searchable()
+                ->searchPrompt('Busca por número, piso o tipo...')
+                ->noSearchResultsMessage('No hay habitaciones disponibles para esas fechas.')
+                ->validationMessages(['required' => 'El campo Habitación es obligatorio.'])
                 ->getSearchResultsUsing(function (string $search, Get $get) {
                     $checkIn  = $get('check_in_date');
                     $checkOut = $get('check_out_date');
@@ -154,6 +181,11 @@ class ReservationForm
                 ->numeric()
                 ->prefix('$')
                 ->required()
+                ->extraInputAttributes(['required' => false])      
+                ->validationMessages([
+                    'required' => 'La tarifa por noche es obligatoria.',
+                    'numeric'  => 'La tarifa por noche debe ser un número válido.',
+                ])
                 ->helperText('Se llena automáticamente al seleccionar habitación. Puedes modificarla.'),
 
         ]);

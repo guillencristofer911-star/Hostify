@@ -15,6 +15,8 @@ class RoomTypeForm
             TextInput::make('name')
                 ->label('Nombre del tipo')
                 ->required()
+                ->extraInputAttributes(['required' => false])
+                ->validationMessages(['required' => 'El nombre del tipo de habitación es obligatorio.'])
                 ->maxLength(80)
                 ->placeholder('Doble, Suite, Triple...')
                 ->prefixIcon('heroicon-o-tag'),
@@ -22,6 +24,12 @@ class RoomTypeForm
             TextInput::make('base_price')
                 ->label('Precio base por noche')
                 ->required()
+                ->extraInputAttributes(['required' => false])
+                ->validationMessages([
+                    'required' => 'El precio base por noche es obligatorio.',
+                    'numeric'  => 'El precio base debe ser un número válido.',
+                    'min'      => 'El precio base debe ser mayor o igual a cero.',
+                ])
                 ->numeric()
                 ->prefix('$')
                 ->minValue(0)
@@ -30,6 +38,13 @@ class RoomTypeForm
             TextInput::make('capacity')
                 ->label('Capacidad máx. huéspedes')
                 ->required()
+                ->extraInputAttributes(['required' => false])
+                ->validationMessages([
+                    'required' => 'La capacidad máxima de huéspedes es obligatoria.',
+                    'numeric'  => 'La capacidad debe ser un número entero.',
+                    'min'      => 'La capacidad mínima es 1 huésped.',
+                    'max'      => 'La capacidad máxima permitida es 20 huéspedes.',
+                ])
                 ->numeric()
                 ->minValue(1)
                 ->maxValue(20)

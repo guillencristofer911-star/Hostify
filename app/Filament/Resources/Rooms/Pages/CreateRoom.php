@@ -4,10 +4,26 @@ namespace App\Filament\Resources\Rooms\Pages;
 
 use App\Filament\Resources\Rooms\RoomResource;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Contracts\Support\Htmlable;
 
 class CreateRoom extends CreateRecord
 {
     protected static string $resource = RoomResource::class;
+
+    public function getTitle(): string|Htmlable
+    {
+        return 'Crear Habitación';
+    }
+
+    public function getHeading(): string|Htmlable
+    {
+        return 'Crear Habitación';
+    }
+
+    public function getBreadcrumb(): string
+    {
+        return 'Crear';
+    }
 
     protected function getCreateFormAction(): \Filament\Actions\Action
     {

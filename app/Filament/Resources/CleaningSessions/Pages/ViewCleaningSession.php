@@ -10,12 +10,28 @@ use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class ViewCleaningSession extends ViewRecord
 {
     protected static string $resource = CleaningSessionResource::class;
+
+    public function getTitle(): string|Htmlable
+    {
+        return 'Ver Sesión de Limpieza';
+    }
+
+    public function getHeading(): string|Htmlable
+    {
+        return 'Ver Sesión de Limpieza';
+    }
+
+    public function getBreadcrumb(): string
+    {
+        return 'Ver';
+    }
 
     protected function getHeaderActions(): array
     {
@@ -77,7 +93,6 @@ class ViewCleaningSession extends ViewRecord
                         'duration_minutes' => $duration,
                     ]);
 
-                    // Consistente con CleaningSessionsTable — con actor registrado
                     $record->room?->updateStatus(
                         RoomStatus::Libre,
                         Auth::id(),

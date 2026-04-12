@@ -4,10 +4,26 @@ namespace App\Filament\Resources\Guests\Pages;
 
 use App\Filament\Resources\Guests\GuestResource;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Contracts\Support\Htmlable;
 
 class CreateGuest extends CreateRecord
 {
     protected static string $resource = GuestResource::class;
+
+    public function getTitle(): string|Htmlable
+    {
+        return 'Crear Huésped';
+    }
+
+    public function getHeading(): string|Htmlable
+    {
+        return 'Crear Huésped';
+    }
+
+    public function getBreadcrumb(): string
+    {
+        return 'Crear';
+    }
 
     protected function getCreateFormAction(): \Filament\Actions\Action
     {

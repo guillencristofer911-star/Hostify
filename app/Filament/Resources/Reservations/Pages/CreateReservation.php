@@ -4,11 +4,27 @@ namespace App\Filament\Resources\Reservations\Pages;
 
 use App\Filament\Resources\Reservations\ReservationResource;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
 
 class CreateReservation extends CreateRecord
 {
     protected static string $resource = ReservationResource::class;
+
+    public function getTitle(): string|Htmlable
+    {
+        return 'Crear Reserva';
+    }
+
+    public function getHeading(): string|Htmlable
+    {
+        return 'Crear Reserva';
+    }
+
+    public function getBreadcrumb(): string
+    {
+        return 'Crear';
+    }
 
     protected function getCreateFormAction(): \Filament\Actions\Action
     {

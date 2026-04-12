@@ -9,10 +9,26 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Contracts\Support\Htmlable;
 
 class ViewShiftClose extends ViewRecord
 {
     protected static string $resource = ShiftCloseResource::class;
+
+    public function getTitle(): string|Htmlable
+    {
+        return 'Ver Cierre de Turno';
+    }
+
+    public function getHeading(): string|Htmlable
+    {
+        return 'Ver Cierre de Turno';
+    }
+
+    public function getBreadcrumb(): string
+    {
+        return 'Ver';
+    }
 
     public function infolist(Schema $schema): Schema
     {
@@ -108,7 +124,7 @@ class ViewShiftClose extends ViewRecord
                 ->icon('heroicon-o-chat-bubble-left-ellipsis')
                 ->schema([
                     TextEntry::make('observations')
-                        ->label('')
+                        ->label('Observaciones')       
                         ->placeholder('Sin observaciones')
                         ->columnSpanFull(),
                 ]),

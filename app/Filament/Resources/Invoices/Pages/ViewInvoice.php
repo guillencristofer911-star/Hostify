@@ -9,10 +9,28 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Contracts\Support\Htmlable;
 
 class ViewInvoice extends ViewRecord
 {
     protected static string $resource = InvoiceResource::class;
+
+    public function getTitle(): string|Htmlable
+    {
+        $number = $this->record?->invoice_number ?? 'Factura';
+        return "Ver Factura {$number}";
+    }
+
+    public function getHeading(): string|Htmlable
+    {
+        $number = $this->record?->invoice_number ?? 'Factura';
+        return "Ver Factura {$number}";
+    }
+
+    public function getBreadcrumb(): string
+    {
+        return 'Ver';
+    }
 
     protected function getHeaderActions(): array
     {

@@ -24,6 +24,11 @@ class ShiftCloseForm
             DateTimePicker::make('shift_start')
                 ->label('Inicio de turno')
                 ->required()
+                ->native(false)
+                ->validationMessages([
+                    'required' => 'La hora de inicio de turno es obligatoria.',
+                    'date'     => 'La fecha y hora de inicio no tienen un formato válido.',
+                ])
                 ->default(now())
                 ->displayFormat('d/m/Y H:i')
                 ->seconds(false),

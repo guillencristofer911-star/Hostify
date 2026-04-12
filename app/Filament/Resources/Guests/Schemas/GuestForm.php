@@ -16,6 +16,8 @@ class GuestForm
             TextInput::make('full_name')
                 ->label('Nombre completo')
                 ->required()
+                ->extraInputAttributes(['required' => false])
+                ->validationMessages(['required' => 'El nombre completo es obligatorio.'])
                 ->maxLength(120)
                 ->prefixIcon('heroicon-o-user'),
 
@@ -28,11 +30,14 @@ class GuestForm
                     'NIT'       => 'NIT',
                 ])
                 ->required()
-                ->native(false),
+                ->native(false)
+                ->validationMessages(['required' => 'El tipo de documento es obligatorio.']),
 
             TextInput::make('document_number')
                 ->label('Número de documento')
                 ->required()
+                ->extraInputAttributes(['required' => false])
+                ->validationMessages(['required' => 'El número de documento es obligatorio.'])
                 ->unique(ignoreRecord: true)
                 ->maxLength(30)
                 ->prefixIcon('heroicon-o-identification'),
@@ -47,6 +52,7 @@ class GuestForm
                 ->label('Correo electrónico')
                 ->email()
                 ->maxLength(150)
+                ->validationMessages(['email' => 'El correo electrónico no tiene un formato válido.'])
                 ->prefixIcon('heroicon-o-envelope'),
 
             TextInput::make('nationality')

@@ -16,6 +16,8 @@ class UserForm
             TextInput::make('name')
                 ->label('Nombre completo')
                 ->required()
+                ->extraInputAttributes(['required' => false])
+                ->validationMessages(['required' => 'El nombre completo es obligatorio.'])
                 ->maxLength(255)
                 ->prefixIcon('heroicon-o-user'),
 
@@ -23,6 +25,12 @@ class UserForm
                 ->label('Correo electrónico')
                 ->email()
                 ->required()
+                ->extraInputAttributes(['required' => false])
+                ->validationMessages([
+                    'required' => 'El correo electrónico es obligatorio.',
+                    'email'    => 'El correo electrónico no tiene un formato válido.',
+                    'unique'   => 'Este correo electrónico ya está en uso.',
+                ])
                 ->unique(ignoreRecord: true)
                 ->maxLength(255)
                 ->prefixIcon('heroicon-o-envelope'),
@@ -50,6 +58,8 @@ class UserForm
                 ->dehydrateStateUsing(fn ($state) => Hash::make($state))
                 ->dehydrated(fn ($state) => filled($state))
                 ->required(fn (string $operation): bool => $operation === 'create')
+                ->extraInputAttributes(['required' => false])
+                ->validationMessages(['required' => 'La contraseña es obligatoria para nuevos usuarios.'])
                 ->maxLength(255)
                 ->prefixIcon('heroicon-o-lock-closed'),
         ]);

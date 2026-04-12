@@ -20,11 +20,14 @@ class RoomForm
                 ->options(RoomType::active()->pluck('name', 'id'))
                 ->searchable()
                 ->required()
-                ->native(false),
+                ->native(false)
+                ->validationMessages(['required' => 'El tipo de habitación es obligatorio.']),
 
             TextInput::make('number')
                 ->label('Número de habitación')
                 ->required()
+                ->extraInputAttributes(['required' => false])
+                ->validationMessages(['required' => 'El número de habitación es obligatorio.'])
                 ->maxLength(10)
                 ->unique(ignoreRecord: true)
                 ->placeholder('101, A2, SUITE-1...')
@@ -41,7 +44,8 @@ class RoomForm
                 ->options(RoomStatus::options())
                 ->default(RoomStatus::Libre->value)
                 ->required()
-                ->native(false),
+                ->native(false)
+                ->validationMessages(['required' => 'El estado de la habitación es obligatorio.']),
 
             Toggle::make('is_active')
                 ->label('Activa')

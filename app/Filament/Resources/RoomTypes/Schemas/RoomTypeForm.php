@@ -19,6 +19,10 @@ class RoomTypeForm
                 ->validationMessages(['required' => 'El nombre del tipo de habitación es obligatorio.'])
                 ->maxLength(80)
                 ->placeholder('Doble, Suite, Triple...')
+                ->live(onBlur: true)
+                ->afterStateUpdated(function ($component) {
+                    $component->getLivewire()->resetValidation($component->getStatePath());
+                })
                 ->prefixIcon('heroicon-o-tag'),
 
             TextInput::make('base_price')
@@ -33,6 +37,10 @@ class RoomTypeForm
                 ->numeric()
                 ->prefix('$')
                 ->minValue(0)
+                ->live(onBlur: true)
+                ->afterStateUpdated(function ($component) {
+                    $component->getLivewire()->resetValidation($component->getStatePath());
+                })
                 ->prefixIcon('heroicon-o-banknotes'),
 
             TextInput::make('capacity')
@@ -48,6 +56,10 @@ class RoomTypeForm
                 ->numeric()
                 ->minValue(1)
                 ->maxValue(20)
+                ->live(onBlur: true)
+                ->afterStateUpdated(function ($component) {
+                    $component->getLivewire()->resetValidation($component->getStatePath());
+                })
                 ->prefixIcon('heroicon-o-users'),
 
             Textarea::make('description')

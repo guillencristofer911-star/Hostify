@@ -42,12 +42,20 @@ class ReservationForm
                     return $g?->full_label ?? $value;
                 })
                 ->required()
+                ->live()
+                ->afterStateUpdated(function ($component) {
+                    $component->getLivewire()->resetValidation($component->getStatePath());
+                })
                 ->validationMessages(['required' => 'El campo Huésped es obligatorio.'])
                 ->createOptionForm([
                     TextInput::make('full_name')
                         ->label('Nombre completo')
                         ->required()
                         ->extraInputAttributes(['required' => false])
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function ($component) {
+                            $component->getLivewire()->resetValidation($component->getStatePath());
+                        })
                         ->validationMessages(['required' => 'El nombre completo es obligatorio.']),
                     Select::make('document_type')
                         ->label('Tipo documento')
@@ -58,18 +66,34 @@ class ReservationForm
                         ])
                         ->required()
                         ->native(false)
+                        ->live()
+                        ->afterStateUpdated(function ($component) {
+                            $component->getLivewire()->resetValidation($component->getStatePath());
+                        })
                         ->validationMessages(['required' => 'El tipo de documento es obligatorio.']),
                     TextInput::make('document_number')
                         ->label('Número documento')
                         ->required()
                         ->extraInputAttributes(['required' => false])
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function ($component) {
+                            $component->getLivewire()->resetValidation($component->getStatePath());
+                        })
                         ->validationMessages(['required' => 'El número de documento es obligatorio.']),
                     TextInput::make('phone')
                         ->label('Teléfono')
-                        ->tel(),
+                        ->tel()
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function ($component) {
+                            $component->getLivewire()->resetValidation($component->getStatePath());
+                        }),
                     TextInput::make('email')
                         ->label('Email')
                         ->email()
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function ($component) {
+                            $component->getLivewire()->resetValidation($component->getStatePath());
+                        })
                         ->validationMessages(['email' => 'El correo electrónico no tiene un formato válido.']),
                 ])
                 ->createOptionUsing(function (array $data) {
@@ -88,7 +112,8 @@ class ReservationForm
                 ])
                 ->minDate(today())
                 ->live()
-                ->afterStateUpdated(function (Set $set) {
+                ->afterStateUpdated(function ($component, Set $set) {
+                    $component->getLivewire()->resetValidation($component->getStatePath());
                     $set('check_out_date', null);
                     $set('room_id', null);
                 }),
@@ -102,9 +127,13 @@ class ReservationForm
                     'date'     => 'La fecha de salida no tiene un formato válido.',
                     'after'    => 'La fecha de salida debe ser posterior a la fecha de entrada.',
                 ])
-                ->minDate(fn (Get $get) => $get('check_in_date') ?? today())
+                ->minDate(fn (Get $get) => $get('check_in_date')
+                    ? \Carbon\Carbon::parse($get('check_in_date'))->addDay()
+                    : today()->addDay()
+                )
                 ->live()
-                ->afterStateUpdated(function (Set $set) {
+                ->afterStateUpdated(function ($component, Set $set) {
+                    $component->getLivewire()->resetValidation($component->getStatePath());
                     $set('room_id', null);
                 }),
 
@@ -168,7 +197,8 @@ class ReservationForm
                         . ' ($' . number_format($room->roomType->base_price, 0, ',', '.') . ')';
                 })
                 ->live()
-                ->afterStateUpdated(function ($state, Set $set) {
+                ->afterStateUpdated(function ($component, $state, Set $set) {
+                    $component->getLivewire()->resetValidation($component->getStatePath());
                     if ($state) {
                         $room = Room::with('roomType')->find($state);
                         $set('rate', $room?->roomType?->base_price);
@@ -181,11 +211,15 @@ class ReservationForm
                 ->numeric()
                 ->prefix('$')
                 ->required()
-                ->extraInputAttributes(['required' => false])      
+                ->extraInputAttributes(['required' => false])
                 ->validationMessages([
                     'required' => 'La tarifa por noche es obligatoria.',
                     'numeric'  => 'La tarifa por noche debe ser un número válido.',
                 ])
+                ->live(onBlur: true)
+                ->afterStateUpdated(function ($component) {
+                    $component->getLivewire()->resetValidation($component->getStatePath());
+                })
                 ->helperText('Se llena automáticamente al seleccionar habitación. Puedes modificarla.'),
 
         ]);

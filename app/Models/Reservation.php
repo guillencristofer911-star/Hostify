@@ -8,7 +8,7 @@ use App\Enums\ReservationStatus;
 use App\Enums\RoomStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Factories\HasFactory; 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -43,7 +43,7 @@ class Reservation extends Model
         'actual_check_out' => 'datetime',
         'rate'             => 'decimal:2',
         'status'           => ReservationStatus::class,
-        'source'           => ReservationSource::class, 
+        'source'           => ReservationSource::class,
     ];
 
     //  Relaciones 
@@ -175,7 +175,7 @@ class Reservation extends Model
     {
         $this->loadMissing(['room', 'charges', 'invoice']);
 
-        //  Guards ────────────────────────────────────────────────────────────
+        //  Guards 
 
         if ($this->status !== ReservationStatus::Activa) {
             throw new \DomainException('Solo se puede registrar salida en reservas activas.');
@@ -185,25 +185,25 @@ class Reservation extends Model
             throw new \DomainException('La reserva no tiene habitación asignada.');
         }
 
+        if (! $this->guest_id) {
+            throw new \DomainException('La reserva no tiene huésped asignado.');
+        }
+
         if ($this->invoice) {
             throw new \DomainException('La reserva ya tiene una factura generada.');
         }
 
-        // validar que hay un turno abierto antes de proceder
-        $shiftCloseId = ShiftClose::openForUser((string) Auth::id());
+        $shiftCloseId = ShiftClose::openForUser(Auth::id());
 
         if (! $shiftCloseId) {
             throw new \DomainException('No hay un turno abierto. Abre un turno antes de registrar la salida.');
         }
 
-        // ← NUEVO: validar monto positivo
         if ($amount <= 0) {
             throw new \DomainException('El monto del pago debe ser mayor a cero.');
         }
 
-        //  Ejecución transaccional 
-        // Si cualquier paso falla (factura, pago), todo hace rollback
-        // y la habitación / reserva no quedan en estado inconsistente.
+
 
         DB::transaction(function () use ($amount, $method, $notes, $shiftCloseId) {
 
@@ -215,28 +215,17 @@ class Reservation extends Model
                 'actual_check_out' => now(),
             ]);
 
-            // 2. Marcar habitación como sucia
             $this->room->updateStatus(RoomStatus::Sucia);
 
-            // 3. Crear factura — try/catch por si hay colisión en invoice_number
-            try {
-                $this->invoice()->create([
-                    'invoice_number' => Invoice::generateNumber(),
-                    'subtotal'       => $subtotal,
-                    'taxes'          => 0,
-                    'total'          => $subtotal,
-                    'status'         => InvoiceStatus::Pagada,
-                ]);
-            } catch (\Illuminate\Database\UniqueConstraintViolationException) {
-                // Reintento con nuevo número si hubo colisión de milisegundo
-                $this->invoice()->create([
-                    'invoice_number' => Invoice::generateNumber(),
-                    'subtotal'       => $subtotal,
-                    'taxes'          => 0,
-                    'total'          => $subtotal,
-                    'status'         => InvoiceStatus::Pagada,
-                ]);
-            }
+            $this->invoice()->create([
+                'guest_id'       => $this->guest_id,
+                'invoice_number' => Invoice::generateNumber(),
+                'subtotal'       => $subtotal,
+                'taxes'          => 0,
+                'total'          => $subtotal,
+                'status'         => InvoiceStatus::Pagada,
+                'issued_at'      => now(),
+            ]);
 
             // 4. Registrar pago
             $this->payments()->create([

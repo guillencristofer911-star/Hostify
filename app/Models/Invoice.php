@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Invoice extends Model
 {
@@ -27,7 +28,7 @@ class Invoice extends Model
     ];
 
     protected $casts = [
-        'status' => \App\Enums\InvoiceStatus::class,
+        'status'       => \App\Enums\InvoiceStatus::class,
         'subtotal'     => 'decimal:2',
         'extras_total' => 'decimal:2',
         'taxes'        => 'decimal:2',
@@ -49,5 +50,30 @@ class Invoice extends Model
     public function charges(): HasMany
     {
         return $this->hasMany(Charge::class, 'reservation_id', 'reservation_id');
+    }
+
+
+    public static function generateNumber(): string
+    {
+
+        $acquired = DB::selectOne('SELECT pg_try_advisory_xact_lock(?) AS locked', [987654321]);
+
+        if (! $acquired?->locked) {
+            DB::selectOne('SELECT pg_advisory_xact_lock(?)', [987654321]);
+        }
+
+        $year = now()->year;
+        $prefix = "F-{$year}-";
+
+        $last = DB::table('invoices')
+            ->whereNull('deleted_at')
+            ->where('invoice_number', 'like', $prefix . '%')
+            ->max('invoice_number');
+
+        $sequence = $last
+            ? (int) substr($last, strrpos($last, '-') + 1)
+            : 0;
+
+        return sprintf('F-%d-%04d', $year, $sequence + 1);
     }
 }

@@ -66,12 +66,6 @@ class ReservationForm
                         ])
                         ->required()
                         ->native(false)
-                        ->getOptionLabelUsing(fn ($value): ?string => match($value) {
-                            'CC'        => 'Cédula',
-                            'CE'        => 'Cédula Extranjería',
-                            'Pasaporte' => 'Pasaporte',
-                            default     => $value,
-                        })
                         ->live()
                         ->afterStateUpdated(function ($component) {
                             $component->getLivewire()->resetValidation($component->getStatePath());
@@ -128,9 +122,6 @@ class ReservationForm
                 ->label('Fecha salida')
                 ->required()
                 ->native(false)
-                ->rules([
-                    fn (Get $get): string => 'after:' . ($get('check_in_date') ?? 'today'),
-                ])
                 ->validationMessages([
                     'required' => 'La fecha de salida es obligatoria.',
                     'date'     => 'La fecha de salida no tiene un formato válido.',
@@ -211,6 +202,7 @@ class ReservationForm
                     if ($state) {
                         $room = Room::with('roomType')->find($state);
                         $set('rate', $room?->roomType?->base_price);
+                        $component->getLivewire()->resetValidation('data.rate');
                     }
                 }),
 

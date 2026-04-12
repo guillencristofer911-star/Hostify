@@ -5,11 +5,11 @@ return [
     'actions' => [
 
         'logout' => [
-            'label' => 'Salir',
+            'label' => 'Cerrar sesión',
         ],
 
     ],
 
-    'welcome' => 'Bienvenida/o',
+    'welcome' => 'Bienvenido, :name',
 
 ];

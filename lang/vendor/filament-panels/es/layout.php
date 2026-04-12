@@ -37,15 +37,15 @@ return [
         'theme_switcher' => [
 
             'dark' => [
-                'label' => 'A modo oscuro',
+                'label' => 'Cambiar a modo oscuro',
             ],
 
             'light' => [
-                'label' => 'A modo claro',
+                'label' => 'Cambiar a modo claro',
             ],
 
             'system' => [
-                'label' => 'A modo del sistema',
+                'label' => 'Usar tema del sistema',
             ],
 
         ],
@@ -53,11 +53,11 @@ return [
     ],
 
     'avatar' => [
-        'alt' => 'Avatar of :name',
+        'alt' => 'Avatar de :name',
     ],
 
     'logo' => [
-        'alt' => ':name logo',
+        'alt' => 'Logo de :name',
     ],
 
     'tenant_menu' => [

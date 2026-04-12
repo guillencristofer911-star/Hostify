@@ -26,7 +26,7 @@ class ReservationResource extends Resource
     protected static ?string $navigationLabel      = 'Reservas';
     protected static ?string $modelLabel           = 'Reserva';
     protected static ?string $pluralModelLabel     = 'Reservas';
-    protected static ?string $recordTitleAttribute = 'id';
+    protected static ?string $recordTitleAttribute = 'title';
     protected static ?int    $navigationSort       = 2;
 
     private static function authUser(): ?User

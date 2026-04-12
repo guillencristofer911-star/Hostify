@@ -46,7 +46,7 @@ class Reservation extends Model
         'source'           => ReservationSource::class,
     ];
 
-    //  Relaciones 
+    //  Relaciones
 
     public function guest(): BelongsTo
     {
@@ -88,7 +88,7 @@ class Reservation extends Model
         return $this->hasMany(Incident::class);
     }
 
-    //  Accessors 
+    //  Accessors
 
     public function getNightsAttribute(): int
     {
@@ -110,7 +110,22 @@ class Reservation extends Model
         return $this->room_total + $this->total_charges;
     }
 
-    //  Acciones de negocio 
+    /**
+     * FIX BUG-005: Título descriptivo para Filament v4 (View, breadcrumb, título de página).
+     * Formato: "Reserva #abc12345 · Carlos López · 20 abr → 25 abr"
+     * Usa los primeros 8 caracteres del UUID como referencia corta legible.
+     */
+    public function getTitleAttribute(): string
+    {
+        $ref      = strtoupper(substr($this->id, 0, 8));
+        $guest    = $this->guest?->full_name ?? 'Sin huésped';
+        $checkIn  = $this->check_in_date?->translatedFormat('d M') ?? '—';
+        $checkOut = $this->check_out_date?->translatedFormat('d M') ?? '—';
+
+        return "Reserva #{$ref} · {$guest} · {$checkIn} → {$checkOut}";
+    }
+
+    //  Acciones de negocio
 
     public function approve(): void
     {
@@ -175,7 +190,7 @@ class Reservation extends Model
     {
         $this->loadMissing(['room', 'charges', 'invoice']);
 
-        //  Guards 
+        //  Guards
 
         if ($this->status !== ReservationStatus::Activa) {
             throw new \DomainException('Solo se puede registrar salida en reservas activas.');
@@ -202,8 +217,6 @@ class Reservation extends Model
         if ($amount <= 0) {
             throw new \DomainException('El monto del pago debe ser mayor a cero.');
         }
-
-
 
         DB::transaction(function () use ($amount, $method, $notes, $shiftCloseId) {
 
@@ -244,7 +257,7 @@ class Reservation extends Model
         $this->update(['pre_register_token' => Str::random(64)]);
     }
 
-    //  Scopes 
+    //  Scopes
 
     public function scopePending($query)
     {

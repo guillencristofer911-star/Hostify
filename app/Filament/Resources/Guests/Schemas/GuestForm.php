@@ -10,6 +10,14 @@ use Filament\Schemas\Schema;
 
 class GuestForm
 {
+
+    private const DOCUMENT_TYPES = [
+        'CC'        => 'Cédula de Ciudadanía',
+        'CE'        => 'Cédula de Extranjería',
+        'Pasaporte' => 'Pasaporte',
+        'NIT'       => 'NIT',
+    ];
+
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
@@ -27,12 +35,9 @@ class GuestForm
 
             Select::make('document_type')
                 ->label('Tipo de documento')
-                ->options([
-                    'CC'        => 'Cédula de Ciudadanía',
-                    'CE'        => 'Cédula de Extranjería',
-                    'Pasaporte' => 'Pasaporte',
-                    'NIT'       => 'NIT',
-                ])
+                ->options(self::DOCUMENT_TYPES)
+
+                ->getOptionLabelUsing(fn ($value): ?string => self::DOCUMENT_TYPES[$value] ?? $value)
                 ->required()
                 ->native(false)
                 ->live()

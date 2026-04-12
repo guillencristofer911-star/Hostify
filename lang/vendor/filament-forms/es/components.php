@@ -51,7 +51,7 @@ return [
             ],
 
             'delete' => [
-                'label' => 'Borrar',
+                'label' => 'Eliminar',
             ],
 
             'edit' => [
@@ -165,7 +165,7 @@ return [
                 ],
 
                 'reset' => [
-                    'label' => 'Reiniciar',
+                    'label' => 'Restablecer',
                 ],
 
                 'rotate_left' => [
@@ -189,11 +189,11 @@ return [
                 ],
 
                 'zoom_in' => [
-                    'label' => 'Acercarse',
+                    'label' => 'Acercar',
                 ],
 
                 'zoom_out' => [
-                    'label' => 'Alejarse',
+                    'label' => 'Alejar',
                 ],
 
             ],
@@ -350,7 +350,7 @@ return [
             ],
 
             'delete' => [
-                'label' => 'Borrar',
+                'label' => 'Eliminar',
             ],
 
             'reorder' => [
@@ -473,6 +473,7 @@ return [
                                 'two_start_fourth' => 'Dos (Comienzo del cuarto)',
                                 'two_end_fourth' => 'Dos (Final del cuarto)',
                             ],
+
                         ],
 
                         'columns' => [
@@ -587,7 +588,7 @@ return [
             'clear_formatting' => 'Limpiar formato',
             'code' => 'Código',
             'code_block' => 'Bloque de código',
-            'custom_blocks' => 'Bloques',
+            'custom_blocks' => 'Bloques personalizados',
             'details' => 'Detalles',
             'h1' => 'Título',
             'h2' => 'Encabezado',
@@ -597,13 +598,13 @@ return [
             'highlight' => 'Resaltar',
             'horizontal_rule' => 'Línea horizontal',
             'italic' => 'Cursiva',
-            'lead' => 'Texto guía',
+            'lead' => 'Texto destacado',
             'link' => 'Enlace',
             'merge_tags' => 'Etiquetas dinámicas',
             'ordered_list' => 'Lista numerada',
             'redo' => 'Rehacer',
             'small' => 'Texto pequeño',
-            'strike' => 'Tachar',
+            'strike' => 'Tachado',
             'subscript' => 'Subíndice',
             'superscript' => 'Superíndice',
             'table' => 'Tabla',
@@ -619,7 +620,7 @@ return [
             'table_toggle_header_row' => 'Alternar fila de encabezado',
             'table_toggle_header_cell' => 'Alternar celda de encabezado',
             'text_color' => 'Color de texto',
-            'underline' => 'Subrayar',
+            'underline' => 'Subrayado',
             'undo' => 'Deshacer',
         ],
 
@@ -637,7 +638,7 @@ return [
 
                 'modal' => [
 
-                    'heading' => 'Nuevo',
+                    'heading' => 'Crear nuevo',
 
                     'actions' => [
 
@@ -646,7 +647,7 @@ return [
                         ],
 
                         'create_another' => [
-                            'label' => 'Crear y crear otro',
+                            'label' => 'Crear y añadir otro',
                         ],
 
                     ],
@@ -684,7 +685,7 @@ return [
 
         'loading_message' => 'Cargando...',
 
-        'max_items_message' => 'Solo :count pueden ser seleccionados.',
+        'max_items_message' => 'Solo se pueden seleccionar :count.',
 
         'no_options_message' => 'No hay opciones disponibles.',
 
@@ -694,7 +695,7 @@ return [
 
         'searching_message' => 'Buscando...',
 
-        'search_prompt' => 'Teclee para buscar...',
+        'search_prompt' => 'Escriba para buscar...',
 
     ],
 

@@ -13,7 +13,7 @@ return [
             ],
 
             'reset' => [
-                'label' => 'Resetear las columnas',
+                'label' => 'Restablecer columnas',
             ],
 
         ],
@@ -83,7 +83,7 @@ return [
 
         'subheadings' => [
             'all' => 'Todos :label',
-            'group' => 'resumen del :group',
+            'group' => 'Resumen de :group',
             'page' => 'Esta página',
         ],
 
@@ -120,15 +120,15 @@ return [
         ],
 
         'group' => [
-            'label' => 'Grupo',
+            'label' => 'Agrupar',
         ],
 
         'open_bulk_actions' => [
-            'label' => 'Abrir acciones',
+            'label' => 'Acciones masivas',
         ],
 
         'column_manager' => [
-            'label' => 'Alternar columnas',
+            'label' => 'Gestionar columnas',
         ],
 
     ],
@@ -137,7 +137,7 @@ return [
 
         'heading' => 'No se encontraron registros',
 
-        'description' => 'Cree un :model para empezar.',
+        'description' => 'Cree un :model para comenzar.',
 
     ],
 
@@ -159,7 +159,7 @@ return [
             ],
 
             'reset' => [
-                'label' => 'Resetear los filtros',
+                'label' => 'Restablecer filtros',
             ],
 
         ],
@@ -186,11 +186,11 @@ return [
 
             'label' => 'Registros eliminados',
 
-            'only_trashed' => 'Solo registros eliminados',
+            'only_trashed' => 'Solo eliminados',
 
-            'with_trashed' => 'Con registros eliminados',
+            'with_trashed' => 'Incluir eliminados',
 
-            'without_trashed' => 'Sin registros eliminados',
+            'without_trashed' => 'Excluir eliminados',
 
         ],
 
@@ -206,7 +206,7 @@ return [
 
             'direction' => [
 
-                'label' => 'Dirección de grupo',
+                'label' => 'Dirección',
 
                 'options' => [
                     'asc' => 'Ascendente',
@@ -219,7 +219,7 @@ return [
 
     ],
 
-    'reorder_indicator' => 'Arrastrar los registros en el orden.',
+    'reorder_indicator' => 'Arrastre los registros para reordenarlos.',
 
     'selection_indicator' => [
 
@@ -228,11 +228,11 @@ return [
         'actions' => [
 
             'select_all' => [
-                'label' => 'Selecciona todos :count',
+                'label' => 'Seleccionar todos (:count)',
             ],
 
             'deselect_all' => [
-                'label' => 'Deselecciona todos',
+                'label' => 'Deseleccionar todos',
             ],
 
         ],
@@ -249,7 +249,7 @@ return [
 
             'direction' => [
 
-                'label' => 'Dirección del orden',
+                'label' => 'Dirección',
 
                 'options' => [
                     'asc' => 'Ascendente',

@@ -10,6 +10,8 @@ use Filament\Schemas\Schema;
 
 class GuestForm
 {
+    // Keys = valores guardados en BD. Values = etiquetas mostradas al usuario.
+    // NUNCA cambiar los keys — están en la BD de todos los registros existentes.
     private const DOCUMENT_TYPES = [
         'CC'        => 'Cédula de Ciudadanía',
         'CE'        => 'Cédula de Extranjería',
@@ -36,9 +38,14 @@ class GuestForm
 
             Select::make('document_type')
                 ->label('Tipo de documento')
-                ->options(fn () => self::DOCUMENT_TYPES)
+                ->options(self::DOCUMENT_TYPES)
                 ->required()
-                ->native(false)
+                // ->native(true): select HTML nativo del navegador.
+                // Choices.js (->native(false)) secuestra el <select> del DOM y
+                // no siempre dispara el evento 'change' nativo que Livewire necesita
+                // para leer el valor en el submit → intermitencia 100% reproducible.
+                // El select nativo es determinista: Livewire siempre recibe el valor.
+                ->native(true)
                 ->validationMessages(['required' => 'El tipo de documento es obligatorio.']),
 
             TextInput::make('document_number')

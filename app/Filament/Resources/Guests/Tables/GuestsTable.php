@@ -13,6 +13,20 @@ use Filament\Tables\Table;
 
 class GuestsTable
 {
+    private const DOCUMENT_LABELS = [
+        'CC'        => 'Cédula de Ciudadanía',
+        'CE'        => 'Cédula de Extranjería',
+        'Pasaporte' => 'Pasaporte',
+        'NIT'       => 'NIT',
+    ];
+
+    private const DOCUMENT_COLORS = [
+        'CC'        => 'success',
+        'CE'        => 'info',
+        'Pasaporte' => 'warning',
+        'NIT'       => 'danger',
+    ];
+
     public static function configure(Table $table): Table
     {
         return $table
@@ -27,6 +41,9 @@ class GuestsTable
                 TextColumn::make('document_type')
                     ->label('Tipo doc.')
                     ->badge()
+                    // Muestra abreviatura en el badge de la tabla (CC, CE, etc.)
+                    // El nombre completo solo se muestra en Create/Edit.
+                    ->color(fn (string $state): string => self::DOCUMENT_COLORS[$state] ?? 'gray')
                     ->icon('heroicon-o-identification'),
 
                 TextColumn::make('document_number')

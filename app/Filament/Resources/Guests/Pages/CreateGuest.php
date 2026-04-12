@@ -24,6 +24,10 @@ class CreateGuest extends CreateRecord
     {
         return 'Crear';
     }
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('edit', ['record' => $this->getRecord()]);
+    }
 
     protected function getCreateFormAction(): \Filament\Actions\Action
     {

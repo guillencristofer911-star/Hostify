@@ -13,6 +13,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Validation\ValidationException;
 
 class ReservationForm
 {
@@ -75,11 +77,15 @@ class ReservationForm
                         ->label('Número documento')
                         ->required()
                         ->extraInputAttributes(['required' => false])
+                        ->regex('/^[a-zA-Z0-9\-\.]+$/')
+                        ->validationMessages([
+                            'required' => 'El número de documento es obligatorio.',
+                            'regex'    => 'El número de documento solo permite letras, números, guiones y puntos.',
+                        ])
                         ->live(onBlur: true)
                         ->afterStateUpdated(function ($component) {
                             $component->getLivewire()->resetValidation($component->getStatePath());
-                        })
-                        ->validationMessages(['required' => 'El número de documento es obligatorio.']),
+                        }),
                     TextInput::make('phone')
                         ->label('Teléfono')
                         ->tel()
@@ -97,7 +103,13 @@ class ReservationForm
                         ->validationMessages(['email' => 'El correo electrónico no tiene un formato válido.']),
                 ])
                 ->createOptionUsing(function (array $data) {
-                    return Guest::create(array_merge($data, ['is_active' => true]))->id;
+                    try {
+                        return Guest::create(array_merge($data, ['is_active' => true]))->id;
+                    } catch (UniqueConstraintViolationException) {
+                        throw ValidationException::withMessages([
+                            'document_number' => 'Ya existe un huésped con ese número de documento.',
+                        ]);
+                    }
                 }),
 
             // FECHAS

@@ -10,13 +10,13 @@ use Filament\Schemas\Schema;
 
 class GuestForm
 {
-
     private const DOCUMENT_TYPES = [
         'CC'        => 'Cédula de Ciudadanía',
         'CE'        => 'Cédula de Extranjería',
         'Pasaporte' => 'Pasaporte',
         'NIT'       => 'NIT',
     ];
+    private const EMAIL_REGEX = '/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/';
 
     public static function configure(Schema $schema): Schema
     {
@@ -29,20 +29,23 @@ class GuestForm
                 ->maxLength(120)
                 ->live(onBlur: true)
                 ->afterStateUpdated(function ($component) {
-                    $component->getLivewire()->resetValidation($component->getStatePath());
+                    $component->getLivewire()->validateOnly($component->getStatePath());
                 })
                 ->prefixIcon('heroicon-o-user'),
 
             Select::make('document_type')
                 ->label('Tipo de documento')
-                ->options(self::DOCUMENT_TYPES)
-
-                ->getOptionLabelUsing(fn ($value): ?string => self::DOCUMENT_TYPES[$value] ?? $value)
+                ->options(fn () => self::DOCUMENT_TYPES)
+                ->afterStateHydrated(function ($component, $state) {
+                    if (filled($state)) {
+                        $component->state($state);
+                    }
+                })
                 ->required()
                 ->native(false)
                 ->live()
                 ->afterStateUpdated(function ($component) {
-                    $component->getLivewire()->resetValidation($component->getStatePath());
+                    $component->getLivewire()->validateOnly($component->getStatePath());
                 })
                 ->validationMessages(['required' => 'El tipo de documento es obligatorio.']),
 
@@ -50,12 +53,17 @@ class GuestForm
                 ->label('Número de documento')
                 ->required()
                 ->extraInputAttributes(['required' => false])
-                ->validationMessages(['required' => 'El número de documento es obligatorio.'])
+                ->regex('/^[a-zA-Z0-9\-\.]+$/')
+                ->validationMessages([
+                    'required' => 'El número de documento es obligatorio.',
+                    'regex'    => 'El número de documento solo permite letras, números, guiones y puntos.',
+                    'unique'   => 'El número de documento ya está registrado.',
+                ])
                 ->unique(ignoreRecord: true)
                 ->maxLength(30)
                 ->live(onBlur: true)
                 ->afterStateUpdated(function ($component) {
-                    $component->getLivewire()->resetValidation($component->getStatePath());
+                    $component->getLivewire()->validateOnly($component->getStatePath());
                 })
                 ->prefixIcon('heroicon-o-identification'),
 
@@ -65,18 +73,20 @@ class GuestForm
                 ->maxLength(20)
                 ->live(onBlur: true)
                 ->afterStateUpdated(function ($component) {
-                    $component->getLivewire()->resetValidation($component->getStatePath());
+                    $component->getLivewire()->validateOnly($component->getStatePath());
                 })
                 ->prefixIcon('heroicon-o-phone'),
 
             TextInput::make('email')
                 ->label('Correo electrónico')
-                ->email()
+                ->regex(self::EMAIL_REGEX)
+                ->validationMessages([
+                    'regex' => 'El correo electrónico no tiene un formato válido.',
+                ])
                 ->maxLength(150)
-                ->validationMessages(['email' => 'El correo electrónico no tiene un formato válido.'])
                 ->live(onBlur: true)
                 ->afterStateUpdated(function ($component) {
-                    $component->getLivewire()->resetValidation($component->getStatePath());
+                    $component->getLivewire()->validateOnly($component->getStatePath());
                 })
                 ->prefixIcon('heroicon-o-envelope'),
 

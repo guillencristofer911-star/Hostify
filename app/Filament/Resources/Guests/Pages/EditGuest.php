@@ -27,8 +27,10 @@ class EditGuest extends EditRecord
     {
         return 'Editar';
     }
+
     protected function mutateFormDataBeforeFill(array $data): array
-    {        $data['document_type'] = $data['document_type'] ?? $this->getRecord()->document_type;
+    {
+        $data['document_type'] = $this->getRecord()->document_type;
         return $data;
     }
 

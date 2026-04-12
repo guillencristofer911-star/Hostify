@@ -16,6 +16,7 @@ class GuestForm
         'Pasaporte' => 'Pasaporte',
         'NIT'       => 'NIT',
     ];
+
     private const EMAIL_REGEX = '/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/';
 
     public static function configure(Schema $schema): Schema
@@ -36,17 +37,8 @@ class GuestForm
             Select::make('document_type')
                 ->label('Tipo de documento')
                 ->options(fn () => self::DOCUMENT_TYPES)
-                ->afterStateHydrated(function ($component, $state) {
-                    if (filled($state)) {
-                        $component->state($state);
-                    }
-                })
                 ->required()
                 ->native(false)
-                ->live()
-                ->afterStateUpdated(function ($component) {
-                    $component->getLivewire()->validateOnly($component->getStatePath());
-                })
                 ->validationMessages(['required' => 'El tipo de documento es obligatorio.']),
 
             TextInput::make('document_number')

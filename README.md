@@ -1,55 +1,47 @@
 # Hostify
 
-![PHP](https://img.shields.io/badge/PHP-8.2%2B-777BB4?style=flat-square&logo=php&logoColor=white)
-![Laravel](https://img.shields.io/badge/Laravel-12-FF2D20?style=flat-square&logo=laravel&logoColor=white)
-![Filament](https://img.shields.io/badge/Filament-4-FFAA00?style=flat-square)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?style=flat-square&logo=postgresql&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+&#x20;  &#x20;
 
-<p align="center">
-  <a href="https://skillicons.dev">
-    <img src="https://skillicons.dev/icons?i=php,laravel,postgres,tailwind,vite,js,git&theme=light" alt="Tecnologías utilizadas en Hostify" />
-  </a>
-</p>
+**Hostify** is a web application for hotel operations management. The system centralizes key processes such as room management, reservations, guests, check-in, check-out, invoicing, payments, shift closing, and housekeeping from an administrative panel built with **Laravel** and **Filament**.
 
-**Hostify** es una aplicación web para la gestión operativa de hoteles. El sistema centraliza procesos clave como administración de habitaciones, reservas, huéspedes, check-in, check-out, facturación, pagos, cierres de turno y limpieza desde un panel administrativo construido con **Laravel** y **Filament**.
+The project is designed for hotels that need to replace manual or scattered processes with an organized, traceable, browser-accessible web platform.
 
-El proyecto está orientado a hoteles que necesitan reemplazar procesos manuales o dispersos por una plataforma web organizada, trazable y accesible desde navegador.
+> Note: The application interface is currently in Spanish, as the project is designed for hotel operations in Spanish-speaking environments.
 
 ## Demo
 
-Hostify cuenta con una versión desplegada para probar el panel administrativo:
+Hostify has a deployed version available to test the administrative panel:
 
-[Acceder a la demo](https://hostify-main-jpyutf.free.laravel.cloud/admin/login)
+[Access the demo](https://hostify-main-jpyutf.free.laravel.cloud/admin/login)
 
-Credenciales de prueba:
+Test credentials:
 
-| Rol | Correo | Contraseña |
-|---|---|---|
-| Super Admin | `admin@hostify.com` | `hostify2026` |
-| Recepcionista | `ana@hostify.com` | `hostify2026` |
-| Camarera | `maria@hostify.com` | `hostify2026` |
-| Supervisor | `carlos@hostify.com` | `hostify2026` |
+| Role         | Email                | Password      |
+| ------------ | -------------------- | ------------- |
+| Super Admin  | `admin@hostify.com`  | `hostify2026` |
+| Receptionist | `ana@hostify.com`    | `hostify2026` |
+| Housekeeper  | `maria@hostify.com`  | `hostify2026` |
+| Supervisor   | `carlos@hostify.com` | `hostify2026` |
 
-## Tabla de contenido
+## Table of Contents
 
-- [Tecnologías utilizadas](#tecnologías-utilizadas)
-- [Descripción general](#descripción-general)
-- [Funcionalidades principales](#funcionalidades-principales)
-- [Roles del sistema](#roles-del-sistema)
-- [Modelo de dominio](#modelo-de-dominio)
-- [Requisitos previos](#requisitos-previos)
-- [Instalación](#instalación)
-- [Configuración](#configuración)
-- [Base de datos](#base-de-datos)
-- [Ejecución en local](#ejecución-en-local)
-- [Credenciales de prueba](#credenciales-de-prueba)
-- [Comandos útiles](#comandos-útiles)
-- [Estructura del proyecto](#estructura-del-proyecto)
-- [Autor](#autor)
-- [Licencia](#licencia)
+- [Technologies](#technologies)
+- [Overview](#overview)
+- [Main Features](#main-features)
+- [System Roles](#system-roles)
+- [Domain Model](#domain-model)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Database](#database)
+- [Running Locally](#running-locally)
+- [Test Credentials](#test-credentials)
+- [Useful Commands](#useful-commands)
+- [Project Structure](#project-structure)
+- [Author](#author)
+- [License](#license)
 
-## Tecnologías utilizadas
+## Technologies
 
 - **PHP 8.2+**
 - **Laravel 12**
@@ -61,167 +53,166 @@ Credenciales de prueba:
 - **Livewire**
 - **Vite**
 - **Tailwind CSS**
-- **Axios**
 
-## Descripción general
+## Overview
 
-Hostify fue desarrollado como una solución administrativa para apoyar la operación diaria de un hotel. Su objetivo es mejorar la visibilidad del estado de las habitaciones, organizar la gestión de reservas, facilitar el control del huésped durante su estadía y mantener trazabilidad sobre procesos operativos como limpieza, pagos y cierre de caja.
+Hostify was developed as an administrative solution to support the daily operation of a hotel. Its goal is to improve visibility over room status, organize reservation management, support guest tracking during stays, and keep traceability over operational processes such as housekeeping, payments, and cash shift closing.
 
-La aplicación utiliza un panel administrativo basado en Filament, con recursos separados por módulo y control de acceso mediante roles y permisos. Esto permite que cada tipo de usuario acceda únicamente a las funciones necesarias para su operación.
+The application uses an administrative panel based on Filament, with resources separated by module and access control through roles and permissions. This allows each type of user to access only the features required for their operation.
 
-## Funcionalidades principales
+## Main Features
 
-### Panel administrativo
+### Administrative panel
 
-- Acceso al sistema desde `/admin`.
-- Login para usuarios autorizados.
-- Panel administrativo construido con Filament.
-- Navegación organizada por módulos operativos.
-- Tema visual personalizado para el panel.
-- Redirección desde la ruta principal hacia el panel administrativo.
+- System access through `/admin`.
+- Login for authorized users.
+- Administrative panel built with Filament.
+- Navigation organized by operational modules.
+- Custom visual theme for the panel.
+- Redirection from the main route to the administrative panel.
 
-### Habitaciones
+### Rooms
 
-- Registro y administración de habitaciones.
-- Asociación de habitaciones con tipos de habitación.
-- Control de número, piso, estado, notas y disponibilidad.
-- Estados operativos de habitación:
-  - Libre.
-  - Sucia.
-  - Ocupada.
-  - No disponible.
-- Cambio de estado de habitaciones desde el sistema.
-- Historial de cambios de estado con usuario, estado anterior, nuevo estado, origen del cambio y fecha.
+- Room registration and management.
+- Association between rooms and room types.
+- Management of room number, floor, status, notes, and availability.
+- Operational room statuses:
+  - Available.
+  - Dirty.
+  - Occupied.
+  - Unavailable.
+- Room status changes from the system.
+- Status change history including user, previous status, new status, change source, and date.
 
-### Panel operativo de habitaciones
+### Operational room panel
 
-- Vista visual para consultar habitaciones por estado.
-- Agrupación de habitaciones por piso.
-- Resumen operativo por estado de habitación.
-- Filtro por fecha.
-- Actualización periódica del panel.
-- Acceso diferenciado según rol.
-- Vista adaptada para camareras con habitaciones asignadas.
+- Visual view to check rooms by status.
+- Rooms grouped by floor.
+- Operational summary by room status.
+- Date filter.
+- Periodic panel updates.
+- Role-based access.
+- Housekeeper-focused view with assigned rooms.
 
-### Tipos de habitación
+### Room types
 
-- Administración de tipos de habitación.
-- Relación entre tipos de habitación y habitaciones.
-- Datos iniciales cargables mediante seeders.
+- Room type management.
+- Relationship between room types and rooms.
+- Initial data available through seeders.
 
-### Huéspedes
+### Guests
 
-- Registro y administración de huéspedes.
-- Relación de huéspedes con reservas, facturas e incidencias.
-- Consulta de información centralizada para la operación de recepción.
+- Guest registration and management.
+- Guest relationship with reservations, invoices, and incidents.
+- Centralized guest information for reception operations.
 
-### Reservas
+### Reservations
 
-- Creación y administración de reservas.
-- Asociación de reservas con huésped, habitación y usuario creador.
-- Manejo de fechas de entrada y salida.
-- Registro de tarifa por reserva.
-- Estados de reserva:
-  - Pendiente.
-  - Aprobada.
-  - Rechazada.
-  - Activa.
+- Reservation creation and management.
+- Association between reservations, guests, rooms, and the user who created the record.
+- Check-in and check-out date management.
+- Room rate registration per reservation.
+- Reservation statuses:
+  - Pending.
+  - Approved.
+  - Rejected.
+  - Active.
   - Checked out.
-  - Cancelada.
-- Acciones de negocio para aprobar, rechazar, cancelar, hacer check-in y hacer check-out.
-- Cálculo de noches, total de habitación, cargos adicionales y total facturable.
+  - Cancelled.
+- Business actions to approve, reject, cancel, check in, and check out reservations.
+- Calculation of nights, room total, additional charges, and invoice total.
 
-### Check-in y check-out
+### Check-in and check-out
 
-- Check-in sobre reservas aprobadas.
-- Cambio automático de la habitación a estado ocupada al registrar entrada.
-- Check-out sobre reservas activas.
-- Cambio automático de la habitación a estado sucia al registrar salida.
-- Generación de factura durante el checkout.
-- Registro del pago asociado al checkout.
-- Validaciones para evitar operaciones inválidas, como registrar salida sin turno abierto o generar facturas duplicadas.
+- Check-in for approved reservations.
+- Automatic room status change to occupied when check-in is completed.
+- Check-out for active reservations.
+- Automatic room status change to dirty when check-out is completed.
+- Invoice generation during check-out.
+- Payment registration associated with check-out.
+- Business validations to prevent invalid operations, such as checking out without an open shift or generating duplicate invoices.
 
-### Facturación y pagos
+### Invoicing and payments
 
-- Generación de factura asociada a una reserva.
-- Número de factura generado por el sistema.
-- Registro de subtotal, impuestos, total, estado y fecha de emisión.
-- Registro de pagos con monto, método de pago, usuario responsable, fecha y observaciones.
-- Métodos de pago disponibles:
-  - Efectivo.
-  - Datáfono.
-  - Transferencia.
-- Estados de factura:
-  - Borrador.
-  - Emitida.
-  - Pagada.
-  - Anulada.
+- Invoice generation associated with a reservation.
+- System-generated invoice number.
+- Registration of subtotal, taxes, total, status, and issue date.
+- Payment registration with amount, payment method, responsible user, date, and notes.
+- Available payment methods:
+  - Cash.
+  - Card terminal.
+  - Bank transfer.
+- Invoice statuses:
+  - Draft.
+  - Issued.
+  - Paid.
+  - Cancelled.
 
-### Cierres de turno
+### Shift closing
 
-- Administración de cierres de turno.
-- Asociación de pagos a cierres de turno.
-- Control de estado del cierre:
-  - Abierto.
-  - Cerrado.
-  - Validado.
-- Base para conciliación de caja por usuario y turno.
+- Shift closing management.
+- Association between payments and shift closings.
+- Shift closing statuses:
+  - Open.
+  - Closed.
+  - Validated.
+- Base structure for cash reconciliation by user and shift.
 
-### Limpieza
+### Housekeeping
 
-- Administración de sesiones de limpieza.
-- Asignación de habitaciones a camareras.
-- Registro del usuario que asigna la limpieza.
-- Control de fecha asignada, hora de inicio, hora de finalización y duración.
-- Estados de limpieza:
-  - Pendiente.
-  - En proceso.
-  - Terminada.
-- Inicio y finalización de limpieza desde el panel operativo.
-- Registro de notas y fotografía como evidencia posterior a la limpieza.
-- Cambio automático de habitación a estado libre al finalizar la limpieza.
+- Housekeeping session management.
+- Room assignment to housekeepers.
+- Registration of the user who assigns the housekeeping task.
+- Management of assigned date, start time, end time, and duration.
+- Housekeeping statuses:
+  - Pending.
+  - In progress.
+  - Completed.
+- Start and completion of housekeeping sessions from the operational panel.
+- Notes and photo upload as evidence after cleaning.
+- Automatic room status change to available when housekeeping is completed.
 
-## Roles del sistema
+## System Roles
 
-Hostify utiliza roles y permisos para controlar el acceso a módulos, vistas y acciones.
+Hostify uses roles and permissions to control access to modules, views, and actions.
 
-Roles incluidos:
+Included roles:
 
-- **Super Admin**: acceso completo al sistema.
-- **Supervisor**: gestión operativa general.
-- **Recepcionista**: operación de huéspedes, reservas, habitaciones, facturación y caja.
-- **Camarera**: acceso operativo al panel de habitaciones y sesiones de limpieza asignadas.
+- **Super Admin**: full access to the system.
+- **Supervisor**: general operational management.
+- **Receptionist**: guest, reservation, room, invoicing, and cash operations.
+- **Housekeeper**: operational access to the room panel and assigned housekeeping sessions.
 
-## Modelo de dominio
+## Domain Model
 
-El proyecto está organizado alrededor de entidades principales del negocio hotelero:
+The project is organized around the main entities of hotel operations:
 
-| Entidad | Propósito |
-|---|---|
-| `User` | Usuarios del sistema y asignación de roles. |
-| `RoomType` | Tipos de habitación disponibles en el hotel. |
-| `Room` | Habitaciones físicas y estado operativo. |
-| `RoomStatusLog` | Historial de cambios de estado de habitaciones. |
-| `Guest` | Información de huéspedes. |
-| `Reservation` | Reservas asociadas a huéspedes, habitaciones, fechas y estado. |
-| `Invoice` | Facturas generadas desde reservas. |
-| `Charge` | Cargos adicionales asociados a reservas. |
-| `Payment` | Pagos registrados en la operación. |
-| `ShiftClose` | Cierres de turno y control de caja. |
-| `CleaningSession` | Asignaciones y trazabilidad de limpieza por habitación. |
+| Entity            | Purpose                                                        |
+| ----------------- | -------------------------------------------------------------- |
+| `User`            | System users and role assignment.                              |
+| `RoomType`        | Available room types in the hotel.                             |
+| `Room`            | Physical rooms and operational status.                         |
+| `RoomStatusLog`   | Room status change history.                                    |
+| `Guest`           | Guest information.                                             |
+| `Reservation`     | Reservations associated with guests, rooms, dates, and status. |
+| `Invoice`         | Invoices generated from reservations.                          |
+| `Charge`          | Additional charges associated with reservations.               |
+| `Payment`         | Payments registered during operations.                         |
+| `ShiftClose`      | Shift closings and cash control.                               |
+| `CleaningSession` | Housekeeping assignments and traceability by room.             |
 
-## Requisitos previos
+## Prerequisites
 
-Antes de instalar el proyecto, asegúrate de tener instalado:
+Before installing the project, make sure you have the following installed:
 
-- PHP 8.2 o superior.
+- PHP 8.2 or higher.
 - Composer.
 - Node.js.
 - npm.
 - PostgreSQL.
 - Git.
 
-Extensiones PHP necesarias para un entorno Laravel con PostgreSQL:
+Required PHP extensions for a Laravel environment with PostgreSQL:
 
 ```ini
 extension=curl
@@ -234,53 +225,53 @@ extension=pdo_pgsql
 extension=pgsql
 ```
 
-## Instalación
+## Installation
 
-Clona el repositorio:
+Clone the repository:
 
 ```bash
 git clone https://github.com/CristoferGuillen/Hostify.git
 ```
 
-Entra a la carpeta del proyecto:
+Enter the project folder:
 
 ```bash
 cd Hostify
 ```
 
-Instala las dependencias de PHP:
+Install PHP dependencies:
 
 ```bash
 composer install
 ```
 
-Instala las dependencias de JavaScript:
+Install JavaScript dependencies:
 
 ```bash
 npm install
 ```
 
-Copia el archivo de entorno:
+Copy the environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-En Windows PowerShell:
+On Windows PowerShell:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-Genera la clave de la aplicación:
+Generate the application key:
 
 ```bash
 php artisan key:generate
 ```
 
-## Configuración
+## Configuration
 
-Edita el archivo `.env` y configura los datos principales de la aplicación:
+Edit the `.env` file and configure the main application values:
 
 ```env
 APP_NAME=Hostify
@@ -289,7 +280,7 @@ APP_DEBUG=true
 APP_URL=http://localhost:8000
 ```
 
-Configura la conexión a PostgreSQL:
+Configure the PostgreSQL connection:
 
 ```env
 DB_CONNECTION=pgsql
@@ -297,40 +288,40 @@ DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_DATABASE=hostify
 DB_USERNAME=postgres
-DB_PASSWORD=tu_password
+DB_PASSWORD=your_password
 ```
 
-Crea una base de datos llamada `hostify` antes de ejecutar las migraciones.
+Create a database named `hostify` before running the migrations.
 
-## Base de datos
+## Database
 
-Ejecuta las migraciones:
+Run the migrations:
 
 ```bash
 php artisan migrate
 ```
 
-Carga los datos iniciales:
+Load the initial data:
 
 ```bash
 php artisan db:seed
 ```
 
-También puedes reiniciar la base de datos y cargar los seeders en un solo comando:
+You can also reset the database and load seeders in a single command:
 
 ```bash
 php artisan migrate:fresh --seed
 ```
 
-## Ejecución en local
+## Running Locally
 
-Ejecuta el entorno de desarrollo con:
+Run the development environment with:
 
 ```bash
 composer run dev
 ```
 
-También puedes ejecutar Laravel y Vite por separado.
+You can also run Laravel and Vite separately.
 
 Terminal 1:
 
@@ -344,68 +335,68 @@ Terminal 2:
 npm run dev
 ```
 
-Luego abre el panel administrativo en:
+Then open the administrative panel at:
 
 ```text
 http://localhost:8000/admin
 ```
 
-## Credenciales de prueba
+## Test Credentials
 
-Al ejecutar los seeders se crean usuarios iniciales para probar los roles principales del sistema.
+When running the seeders, the project creates initial users to test the main system roles.
 
-| Rol | Correo | Contraseña |
-|---|---|---|
-| Super Admin | `admin@hostify.com` | `hostify2026` |
-| Recepcionista | `ana@hostify.com` | `hostify2026` |
-| Camarera | `maria@hostify.com` | `hostify2026` |
-| Supervisor | `carlos@hostify.com` | `hostify2026` |
+| Role         | Email                | Password      |
+| ------------ | -------------------- | ------------- |
+| Super Admin  | `admin@hostify.com`  | `hostify2026` |
+| Receptionist | `ana@hostify.com`    | `hostify2026` |
+| Housekeeper  | `maria@hostify.com`  | `hostify2026` |
+| Supervisor   | `carlos@hostify.com` | `hostify2026` |
 
-## Comandos útiles
+## Useful Commands
 
-Ejecutar migraciones:
+Run migrations:
 
 ```bash
 php artisan migrate
 ```
 
-Ejecutar seeders:
+Run seeders:
 
 ```bash
 php artisan db:seed
 ```
 
-Recrear la base de datos con datos iniciales:
+Recreate the database with initial data:
 
 ```bash
 php artisan migrate:fresh --seed
 ```
 
-Levantar servidor local:
+Start the local server:
 
 ```bash
 php artisan serve
 ```
 
-Ejecutar Vite:
+Run Vite:
 
 ```bash
 npm run dev
 ```
 
-Compilar assets:
+Build assets:
 
 ```bash
 npm run build
 ```
 
-Ejecutar el entorno completo de desarrollo:
+Run the complete development environment:
 
 ```bash
 composer run dev
 ```
 
-## Estructura del proyecto
+## Project Structure
 
 ```text
 Hostify/
@@ -436,14 +427,14 @@ Hostify/
 └── vite.config.js
 ```
 
-## Autor
+## Author
 
-Desarrollado por **Cristofer Guillen**.
+Developed by **Cristofer Guillen**.
 
 - GitHub: [@CristoferGuillen](https://github.com/CristoferGuillen)
-- Repositorio: [Hostify](https://github.com/CristoferGuillen/Hostify)
+- Repository: [Hostify](https://github.com/CristoferGuillen/Hostify)
 
-## Licencia
+## License
 
-Este proyecto está disponible bajo la licencia **MIT**.
+This project is available under the **MIT** license.
 

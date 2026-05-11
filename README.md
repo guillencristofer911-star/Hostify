@@ -16,7 +16,6 @@
 
 El proyecto está pensado para hoteles que necesitan reemplazar procesos manuales o dispersos por una plataforma web organizada, trazable y accesible desde el navegador.
 
-> Nota: La interfaz de la aplicación se encuentra actualmente en español, ya que el proyecto está orientado a operaciones hoteleras en entornos hispanohablantes.
 
 ## Demo
 
